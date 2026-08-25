@@ -1,0 +1,22 @@
+{
+  "name": "proyecto-sin-nombre-backend",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/WillIribarne/proyecto-sin-nombre-Backend#readme",
+  "bugs": {
+    "url": "https://github.com/WillIribarne/proyecto-sin-nombre-Backend/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/WillIribarne/proyecto-sin-nombre-Backend.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "devstart": "node --watch src/index",
+    "start": "node src/index"
+  }
+}
