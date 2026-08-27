@@ -12,11 +12,14 @@
   },
   "license": "ISC",
   "author": "",
-  "type": "module", 
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "devstart": "node --watch src/index",
+    "devstart": "node --watch src/index", 
     "start": "node src/index"
+  },
+  "dependencies": {
+    "express": "^5.2.1"
   }
 }
