@@ -2,15 +2,30 @@
 
 {
   _id: ObjectId,
-  tipo: String,       // "invitacion_equipo" o "invitacion_encuentro" o "aviso de X cosa" ...
-  emisor: ObjectId,   // usuario/entidad que manda el invite (podria ser system)
-  receptor: ObjectId, // usuario que recibe el mensaje
-  id_referencia: ObjectId, // ref dinámica al EQUIPO o ENCUENTRO en cuestión (i.e. cual equipo/encuentro?)
-  contenido: String  // lo que contiene el mensaje -> sirve para armar el msj 1 vez y no tener que buscar la info del usuario/encuentro/equipo cada vez que se abra el msj
-  estado: String,     // "pendiente" o "aceptada" o "rechazada" o "Eliminado"(p/admin)
-  leido: Boolean,
-  fecha_creacion: Date,
-  fecha_respuesta: Date   // cuando se modificó el estado
+  tipo: String,       // enum: "invitacion_equipo" | "invitacion_encuentro" | "confirmacion_encuentro"
+                       // | "modificacion_encuentro" | "cancelacion_encuentro" | "msj_mvp"
+                       // | "aviso_encuentro_proximo"
+  emisor: ObjectId,    // ref Usuario. Para mensajes automáticos del sistema (p.ej. cuando se
+                        // elimina un partido rechazado por el Lugar) todavía hay que definir
+                        // quién figura como emisor: una cuenta "sistema" dedicada, o el propio
+                        // Lugar/Admin que disparó la acción. Queda pendiente de decidir.
+  receptor: ObjectId,  // ref Usuario que recibe el mensaje
+  id_referencia: ObjectId,      // referencia dinámica al Partido o Equipo en cuestión
+  id_referencia_tipo: String,   // "Partido" | "Equipo" -- se agrega este campo porque Mongoose
+                                 // necesita saber a qué colección apunta id_referencia para poder
+                                 // popularlo dinámicamente (patrón "refPath"); sin este campo
+                                 // hermano, una referencia dinámica no se puede resolver sola.
+  contenido: String,   // texto ya armado del mensaje -> evita tener que reconstruirlo buscando
+                        // datos del usuario/partido/equipo cada vez que se abre el mensaje.
+                        // Ojo: si el partido/equipo referenciado cambia después (fecha, hora),
+                        // este texto queda desactualizado -> por eso existe el tipo
+                        // "modificacion_encuentro": ante un cambio hay que emitir un mensaje
+                        // nuevo, nunca editar el contenido de uno viejo.
+  estado: String,      // enum: ESTADOS_MENSAJERIA ("pendiente" | "aceptada" | "rechazada" | "eliminado")
+                        // (antes mezclaba mayúsculas y minúsculas entre valores)
+  leido: Boolean,       // default false
+  fecha_creacion: Date,  // default Date.now
+  fecha_respuesta: Date  // null hasta que cambia el estado (aceptada/rechazada)
 }
 
 */
