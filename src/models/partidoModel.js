@@ -9,6 +9,7 @@
     jugadores_equipo1[jugadores_por_equipo]: Usuarios,
     jugadores_equipo2[jugadores_por_equipo]: Usuarios,
     creador: Usuario
+    accesibilidad: publico/privado
 }
 
 */

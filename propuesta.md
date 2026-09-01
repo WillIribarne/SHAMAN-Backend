@@ -45,6 +45,7 @@ Mensajería existe para notificar a los jugadores sobre ciertos eventos, princip
         h-> Votar post-encuentro (MVP)
         i-> Ver su historial de partidos jugados
         j-> Ver otros perfiles
+        j.I -> Modificar perfil propio
     "Lugar":
         k-> Aceptar/rechazar solicitudes de creación/modificación Partido
         l-> Cancelar/Modificar Partido (borrar/modificar)
@@ -66,33 +67,59 @@ Mensajería existe para notificar a los jugadores sobre ciertos eventos, princip
 ==============================================================================================
 
 Campos/parámetros:
+(nota: todos incluyen ID autoincremental)
 
 1) Usuarios "Jugador"
-        -
-        -
-        -
-        -
-        -
-        -
-        -
-        -
-        -
-        -
-        -
-    "Lugar":
-        -
-        -
-        -
-        -
-        -
-        -
-        -
-        -
-    "Admin":
+    - Tipo
+    - Usuario
+    - Contraseña
+    - Nombre
+    - Apellido
+    - Mail
+    - Teléfono
+    - Estadísticas:
+        - Calificación
+        - Partidos Jugados:
+        - Partidos Ganados:
+        - Partidos Empatados:
+        - Partidos Perdidos:
+    - Historial[]
+    - Equipos Conformados[]
+"Lugar":
+        - Tipo
+        - Usuario
+        - Contraseña
+        - Nombre
+        - Mail
+        - Teléfono
+        - Disponibilidad[]:
+            - Dia 
+            - Hora
+            - Tipo de Cancha
+"Admin":
+    - Tipo
+    - Usuario
+    - Contraseña
         
 2) Partido:
-    -> Publico/Privado (esto permite que accedan solo con invitación)
+    - Fecha & Horario
+    - Lugar
+    - Tipo de cancha (5, 7, 9, 11)
+    - Estado (pendiente, finalizado, cancelado (o eliminado p/admin))
+    - Jugadores Equipo 1
+    - Jugadores Equipo 2
+    - Publico/Privado (esto permite que accedan solo con invitación)
 3) Equipo:
-    ->
+    - Nombre
+    - Tamaño
+    - Integrantes
+    - Capitan
+    - Estado: Activo o Eliminado
 4) Mensajeria:
-    ->
+    - Tipo: invitación_equipo, invitación_encuentro, confirmación_encuentro, modificación_encuentro, cancelación_encuentro, msj_mvp, aviso_encuentroproximo
+    - Emisor
+    - Receptor
+    - id_referencia: al equipo/encuentro que refiera
+    - contenido: texto del mensaje
+    - fecha_creación
+    - fecha_respuesta: originalmente null
