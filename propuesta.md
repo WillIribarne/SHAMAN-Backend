@@ -26,6 +26,12 @@ Casos uso & Relaciones entre colecciones:
 
 Desc. general: 
 
+El usuario es quién interactúa con las colecciones "Partido" y "Equipo". Hay 3 tipos de usuario: Jugador, Lugar y Admin. 
+    - "Jugador" puede realizar Altas y Bajas de Partidos y de Equipos. Puede invitar gente a sus equipos y a partidos a los que ya está inscripto.
+    - La decisión final del Alta de un partido está dado por la entidad "Lugar" correspondiente. 
+    - Admin puede realizar todas las características de "Jugador", pero *NO ES CONSIDERADO UN JUGADOR PARA PARTIDOS, INVITACIONES, NI EQUIPOS*
+Mensajería existe para notificar a los jugadores sobre ciertos eventos, principalmente invitaciones a partidos/equipos. 
+
 1) Usuarios "Jugador"
         a-> Registrarse
         b-> Crear Partido
