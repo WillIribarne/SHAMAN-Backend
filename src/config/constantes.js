@@ -43,6 +43,20 @@ export const ESTADOS_MENSAJERIA = Object.freeze({
   ELIMINADO: 'eliminado', // baja lógica, por Admin
 });
 
+// Tipos de mensaje de Mensajería
+export const TIPOS_MENSAJE = Object.freeze({
+  INVITACION_EQUIPO: 'invitacion_equipo',
+  INVITACION_ENCUENTRO: 'invitacion_encuentro',
+  CONFIRMACION_ENCUENTRO: 'confirmacion_encuentro',
+  MODIFICACION_ENCUENTRO: 'modificacion_encuentro',
+  CANCELACION_ENCUENTRO: 'cancelacion_encuentro',
+  MSJ_MVP: 'msj_mvp',
+  AVISO_ENCUENTRO_PROXIMO: 'aviso_encuentro_proximo',
+});
+
+// A qué colección puede apuntar Mensajeria.id_referencia (referencia dinámica -> refPath)
+export const REFERENCIAS_MENSAJERIA = Object.freeze(['Partido', 'Equipo']);
+
 // Accesibilidad de un Partido
 export const ACCESIBILIDAD_PARTIDO = Object.freeze({
   PUBLICO: 'publico',

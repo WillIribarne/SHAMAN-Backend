@@ -1,19 +1,41 @@
-/* Boceto para colección EQUIPOS
+import mongoose from 'mongoose';
+import { ESTADOS_EQUIPO, TAMANIOS_EQUIPO } from '../config/constantes.js';
 
-{
-    _id: ObjectId,
-    nombre: String,               // required
-    jugadores_por_equipo: Number, // uno de TAMANIOS_EQUIPO (5, 7, 9 u 11). Antes se llamaba
-                                   // "cant_max_integrantes"; se renombra para usar el mismo nombre
-                                   // que en partidoModel.js y poder comparar ambos campos
-                                   // directamente al validar que un equipo entre en un partido.
-    integrantes: [ObjectId],      // ref Usuario (tipo "jugador"). Longitud <= jugadores_por_equipo,
-                                   // validado en el service (mismo motivo que el cupo de Partido).
-    capitan: ObjectId,             // ref Usuario. ANTES era String suelto (nombre en texto libre).
-                                    // Debe ser uno de los ids presentes en "integrantes"
-                                    // (validación de service).
-    estado: String,                // enum: ESTADOS_EQUIPO ("activo" | "eliminado")
-    createdAt / updatedAt          // timestamps automáticos
-}
+const { Schema, model } = mongoose;
 
-*/
+const equipoSchema = new Schema(
+  {
+    nombre: {
+      type: String,
+      required: [true, 'El nombre del equipo es obligatorio'],
+      trim: true,
+    },
+    // Mismo campo/valores que Partido.jugadores_por_equipo (antes se llamaba
+    // "cant_max_integrantes"), para poder comparar directamente que un equipo entra en
+    // el partido al que se quiere unir.
+    jugadores_por_equipo: {
+      type: Number,
+      enum: TAMANIOS_EQUIPO,
+      required: true,
+    },
+    // Referencias a Usuario (tipo "jugador"). Longitud <= jugadores_por_equipo, validado
+    // en el service.
+    integrantes: [{ type: Schema.Types.ObjectId, ref: 'Usuario' }],
+    // Referencia a Usuario. Antes era un String suelto (nombre en texto libre); debe ser
+    // uno de los ids presentes en "integrantes" (validación de service).
+    capitan: {
+      type: Schema.Types.ObjectId,
+      ref: 'Usuario',
+      required: [true, 'El capitán es obligatorio'],
+    },
+    estado: {
+      type: String,
+      enum: Object.values(ESTADOS_EQUIPO),
+      default: ESTADOS_EQUIPO.ACTIVO,
+    },
+  },
+  { timestamps: true }
+);
+
+export const Equipo = model('Equipo', equipoSchema);
+export default Equipo;

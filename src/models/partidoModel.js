@@ -1,47 +1,79 @@
-/* Boceto para colección ENCUENTROS (Partido)
+import mongoose from 'mongoose';
+import { ESTADOS_PARTIDO, ACCESIBILIDAD_PARTIDO, TAMANIOS_EQUIPO } from '../config/constantes.js';
 
-{
-    _id: ObjectId,
-    fecha_horario: Date,   // required. Debe ser una fecha futura al momento de crear el partido
-                            // (validación de servicio: no se puede crear un partido "para ayer")
-    lugar: ObjectId,        // ref Usuario (tipo "lugar"). ANTES era String suelto: así no se puede
-                             // saber a qué Lugar hay que avisarle para que apruebe el partido, ni
-                             // consultar "todos los partidos pendientes de este Lugar".
-    jugadores_por_equipo: Number, // uno de TAMANIOS_EQUIPO (5, 7, 9 u 11)
-    estado: String,          // enum: ESTADOS_PARTIDO -> ver transiciones más abajo
-    jugadores_equipo1: [ObjectId], // ref Usuario (tipo "jugador"). Solo la referencia: al popular
-    jugadores_equipo2: [ObjectId], // se puede pedir que traiga nombre/apellido, pero NUNCA password
-                                    // (ya viene excluida por select:false) ni historial (se excluye
-                                    // a mano en la query, ver usuarioModel.js).
-                                    // Longitud de cada array <= jugadores_por_equipo: esto es cupo,
-                                    // se valida en el service con una operación atómica para evitar
-                                    // que dos jugadores ocupen el mismo último lugar en simultáneo
-                                    // (race condition si se hace "leer longitud, después hacer push").
-    creador: ObjectId,       // ref Usuario (tipo "jugador"). Si el creador se baja del partido, la
-                              // titularidad se reasigna a otro jugador de jugadores_equipo1/2, a
-                              // elección entre los que están actualmente inscriptos (regla de
-                              // negocio a implementar en el service, no es un campo del modelo).
-    accesibilidad: String,   // enum: ACCESIBILIDAD_PARTIDO ("publico" | "privado")
-    votos_mvp: [{
-      votante: ObjectId,     // ref Usuario
-      votado: ObjectId,      // ref Usuario
-    }],
-    // Reglas de negocio para votos_mvp (a validar en el service, un array no puede forzarlas solo):
-    //   - un jugador solo puede votar una vez por partido
-    //   - nadie puede votarse a sí mismo
-    //   - solo se puede votar cuando estado === "finalizado"
-    createdAt / updatedAt    // timestamps automáticos
-}
+const { Schema, model } = mongoose;
 
---- Transiciones de estado (ESTADOS_PARTIDO) ---
-  pendiente_aprobacion -> confirmado   : el Lugar aprueba la solicitud
-  pendiente_aprobacion -> eliminado    : el Lugar RECHAZA la solicitud -> lo elimina el sistema
-                                          automáticamente (no es una acción manual de Admin)
-  confirmado -> finalizado             : el partido ya se jugó
-  confirmado -> cancelado              : el creador o el Lugar lo cancelan antes de jugarse
-  cualquier estado -> eliminado        : baja lógica manual hecha por un Admin (moderación)
+// Subdocumento de voto MVP. Las reglas que un schema no puede forzar solo (un voto por
+// jugador por partido, nadie se vota a sí mismo, solo se vota si estado === "finalizado")
+// se validan en el service.
+const votoMvpSchema = new Schema(
+  {
+    votante: { type: Schema.Types.ObjectId, ref: 'Usuario', required: true },
+    votado: { type: Schema.Types.ObjectId, ref: 'Usuario', required: true },
+  },
+  { _id: false, timestamps: { createdAt: true, updatedAt: false } }
+);
 
-Nota: validar que el tamaño del Equipo que se une (Equipo.jugadores_por_equipo) coincida con
-el jugadores_por_equipo de este Partido es lógica de servicio, no queda modelada acá.
+const partidoSchema = new Schema(
+  {
+    fecha_horario: {
+      type: Date,
+      required: [true, 'La fecha y horario son obligatorios'],
+      validate: {
+        validator: (valor) => valor > new Date(),
+        message: 'El partido debe programarse para una fecha futura',
+      },
+    },
+    // Referencia a Usuario (tipo "lugar"). Antes era un String suelto: así no se podía saber
+    // a qué Lugar avisarle para que apruebe el partido (ver analisis-diseno.md, pto. 2).
+    lugar: {
+      type: Schema.Types.ObjectId,
+      ref: 'Usuario',
+      required: [true, 'El lugar es obligatorio'],
+    },
+    jugadores_por_equipo: {
+      type: Number,
+      enum: TAMANIOS_EQUIPO,
+      required: true,
+    },
+    estado: {
+      type: String,
+      enum: Object.values(ESTADOS_PARTIDO),
+      default: ESTADOS_PARTIDO.PENDIENTE_APROBACION,
+    },
+    // Referencias a Usuario (tipo "jugador"), no objetos embebidos. Al popular para mostrar
+    // en pantalla, pedir solo campos públicos (nunca "password", que ya viene excluida por
+    // select:false; excluir también "historial" a mano en la query).
+    // Cupo (longitud <= jugadores_por_equipo) se valida en el service con una operación
+    // atómica, para evitar que dos jugadores ocupen el mismo último lugar en simultáneo.
+    jugadores_equipo1: [{ type: Schema.Types.ObjectId, ref: 'Usuario' }],
+    jugadores_equipo2: [{ type: Schema.Types.ObjectId, ref: 'Usuario' }],
+    // Si el creador se baja del partido, la titularidad se reasigna a elección entre los
+    // jugadores actualmente inscriptos (regla de negocio del service, no del modelo).
+    creador: {
+      type: Schema.Types.ObjectId,
+      ref: 'Usuario',
+      required: [true, 'El creador es obligatorio'],
+    },
+    accesibilidad: {
+      type: String,
+      enum: Object.values(ACCESIBILIDAD_PARTIDO),
+      default: ACCESIBILIDAD_PARTIDO.PUBLICO,
+    },
+    votos_mvp: [votoMvpSchema],
+  },
+  { timestamps: true }
+);
 
-*/
+// Transiciones de estado esperadas (documentado también en analisis-diseno.md):
+//   pendiente_aprobacion -> confirmado   (el Lugar aprueba)
+//   pendiente_aprobacion -> eliminado    (el Lugar rechaza -> lo elimina el sistema, automático)
+//   confirmado -> finalizado             (el partido ya se jugó)
+//   confirmado -> cancelado              (el creador o el Lugar lo cancelan antes de jugarse)
+//   cualquier estado -> eliminado        (baja lógica manual de un Admin)
+//
+// Nota: el nombre de la colección queda "partidos" (antes el boceto original la llamaba
+// "ENCUENTROS" en un comentario, pero el resto del proyecto -- propuesta.md, casos de uso,
+// el propio nombre del archivo -- usa siempre "Partido"; se unifica a ese nombre).
+export const Partido = model('Partido', partidoSchema);
+export default Partido;

@@ -114,3 +114,14 @@ Cuando se da de baja (lógicamente) a un Usuario, además de cambiar su `estado`
 Si en algún momento necesitan un "borrar de verdad" (por ejemplo, para cumplir un pedido explícito de un usuario de eliminar su cuenta y todos sus datos), se puede implementar aparte como una operación especial y poco frecuente, usando un hook de Mongoose (`pre('findOneAndDelete')`) que dispare la limpieza de referencias en ese momento puntual. No hace falta para el alcance del parcial (no hay ningún caso de uso que lo pida), pero queda anotado por si surge.
 
 **Sugerencia**: arrancar con la Opción A (ya es coherente con la decisión de soft-delete que tomaron) y, si en la práctica aparece un caso donde de verdad haga falta reasignar cosas automáticamente al eliminar un usuario, migrar puntualmente a la Opción B para ese caso — no hace falta resolver los tres a la vez ahora.
+
+---
+
+## Estado de implementación (Mongoose real)
+
+Los 4 modelos, `src/config/constantes.js`, `src/config/db.js` y un `src/index.js` mínimo ya
+están escritos en código real de Mongoose (no bocetos). Node solo verificó la sintaxis de los
+archivos (`node --check`); todavía no se pudo instalar `mongoose`, `dotenv` ni `bcryptjs` porque
+el registro de npm está bloqueado desde esta sesión (403 `blocked-by-allowlist`), así que falta
+correr `npm install mongoose dotenv bcryptjs` manualmente antes de poder levantar el servidor.
+Tampoco existe todavía el cluster de MongoDB Atlas -> `MONGO_URI` en `.env` está vacía a propósito.

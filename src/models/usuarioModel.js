@@ -1,116 +1,137 @@
-/*
-Boceto para la colección USUARIOS
-Última revisión: se unificó en una sola colección con 3 "tipos" (jugador, lugar, admin),
-por decisión explícita del equipo (simplificar el login: todos entran por el mismo endpoint).
+import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
+import { TIPOS_USUARIO, ESTADOS_USUARIO, TAMANIOS_EQUIPO } from '../config/constantes.js';
 
-=== Cómo evitar documentos con campos null/undefined según el tipo ===
-Si guardamos jugador/lugar/admin en la misma colección con un único schema plano, cada
-documento va a tener campos que no le corresponden (un "admin" con "estadisticas: null",
-etc.). La forma prolija de resolver esto en Mongoose son los "discriminators": se define
-un schema BASE con los campos comunes a los 3 tipos, y un schema HIJO por cada tipo que
-agrega SOLO sus campos propios. Mongoose sigue guardando todo en la misma colección física
-("usuarios"), pero valida y devuelve cada documento con la forma que le corresponde según
-el campo "tipo". Esto es exactamente lo que se pidió: una sola colección + normalización
-prolija por tipo.
+const { Schema, model } = mongoose;
 
---- Campos comunes a los 3 tipos (schema base) ---
-{
-  _id: ObjectId,
-  tipo: String,        // enum: TIPOS_USUARIO ("jugador" | "lugar" | "admin") -> src/config/constantes.js
-  username: String,    // required, unique, se guarda en minúsculas
-  password: String,    // required. Se guarda hasheada (bcrypt). NUNCA se devuelve en la API (select:false)
-  nombre: String,      // required. Para "lugar" es el nombre del predio/negocio
-  mail: String,        // required, unique, se guarda en minúsculas, formato validado
-  telefono: String,    // required (antes era Number: se pierden ceros a la izquierda y no se puede
-                        // validar formato con regex, por eso pasa a String)
-  estado: String,       // enum: ESTADOS_USUARIO ("activo" | "eliminado") -> baja lógica, solo Admin
-  createdAt / updatedAt // timestamps automáticos
-}
+const REGEX_MAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
---- Campos exclusivos de "jugador" ---
-{
-  apellido: String,      // required
-  estadisticas: {
-    partidos_jugados: Number,   // default 0
-    partidos_ganados: Number,   // default 0
-    partidos_empatados: Number, // default 0
-    partidos_perdidos: Number,  // default 0
-    cantidad_MVPS: Number       // default 0. Se incrementa cuando este jugador gana la
-                                 // votación de MVP de un partido (ver partidoModel.js -> votos_mvp)
-    // (se sacó "calificacion": no había ningún caso de uso que definiera quién la carga
-    // ni cuándo se actualiza, así que se elimina hasta que se defina ese mecanismo)
-  },
-  historial: [ObjectId],          // ref a Partido. Se guarda solo la referencia (no el partido
-                                   // completo embebido) para no duplicar datos que ya viven en la
-                                   // colección Partido y quedan desactualizados si el partido cambia.
-  equipos_conformados: [ObjectId] // ref a Equipo. Sin límite fijo (antes tenía un tope de 5 sin
-                                   // justificación en los casos de uso).
-}
-
---- Visibilidad de un perfil "jugador" ---
-Regla acordada: TODOS los campos de un Jugador son públicos, excepto "password" e "historial".
-"password" se puede proteger a nivel de schema (select:false), pero "historial" NO: es visible
-para el dueño del perfil pero no para terceros que solo están mirando el perfil de otro
-jugador. Esa distinción depende de QUIÉN pide los datos, así que se resuelve en el
-controller/service (eligiendo qué proyectar según el usuario autenticado), no en el modelo.
-
---- Campos exclusivos de "lugar" ---
-{
-  disponibilidad: [{
-    dia: String,         // p.ej. "lunes"
-    hora: String,         // p.ej. "20:00"
-    tipo_cancha: Number    // uno de TAMANIOS_EQUIPO (5, 7, 9 u 11)
-  }]
-}
-
---- Campos exclusivos de "admin" ---
-(sin campos propios además de los comunes, por ahora)
-
-
---- Ejemplo ilustrativo de cómo se vería en código con discriminators de Mongoose ---
-(esto es solo para entender el mecanismo -- todavía no es el modelo final, falta instalar
-mongoose y definir el resto de la app)
-
-  import mongoose from 'mongoose';
-  import { TIPOS_USUARIO, ESTADOS_USUARIO, TAMANIOS_EQUIPO } from '../config/constantes.js';
-  const { Schema, model } = mongoose;
-
-  const opciones = { discriminatorKey: 'tipo', timestamps: true };
-
-  const usuarioSchema = new Schema({
-    username: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    password: { type: String, required: true, select: false },
-    nombre:   { type: String, required: true, trim: true },
-    mail:     { type: String, required: true, unique: true, lowercase: true, trim: true },
-    telefono: { type: String, required: true },
-    estado:   { type: String, enum: Object.values(ESTADOS_USUARIO), default: ESTADOS_USUARIO.ACTIVO },
-  }, opciones);
-
-  const Usuario = model('Usuario', usuarioSchema);
-
-  const Jugador = Usuario.discriminator(TIPOS_USUARIO.JUGADOR, new Schema({
-    apellido: { type: String, required: true, trim: true },
-    estadisticas: {
-      partidos_jugados:   { type: Number, default: 0 },
-      partidos_ganados:   { type: Number, default: 0 },
-      partidos_empatados: { type: Number, default: 0 },
-      partidos_perdidos:  { type: Number, default: 0 },
-      cantidad_MVPS:      { type: Number, default: 0 },
+// Colección única "usuarios", con 3 tipos (jugador/lugar/admin) implementados como
+// discriminators de Mongoose: comparten esta colección física, pero cada uno valida y
+// devuelve solo sus propios campos (ver informe/analisis-diseno.md, punto 1).
+const opcionesUsuario = {
+  discriminatorKey: 'tipo',
+  timestamps: true,
+  toJSON: {
+    // Nunca devolver el hash de la contraseña, aunque alguna query lo haya pedido a propósito.
+    transform: (_doc, ret) => {
+      delete ret.password;
+      return ret;
     },
-    historial: [{ type: Schema.Types.ObjectId, ref: 'Partido' }],
-    equipos_conformados: [{ type: Schema.Types.ObjectId, ref: 'Equipo' }],
-  }));
+  },
+};
 
-  const Lugar = Usuario.discriminator(TIPOS_USUARIO.LUGAR, new Schema({
-    disponibilidad: [{
-      dia: String,
-      hora: String,
-      tipo_cancha: { type: Number, enum: TAMANIOS_EQUIPO },
-    }],
-  }));
+const usuarioSchema = new Schema(
+  {
+    username: {
+      type: String,
+      required: [true, 'El username es obligatorio'],
+      unique: true,
+      lowercase: true,
+      trim: true,
+      minlength: [3, 'El username debe tener al menos 3 caracteres'],
+    },
+    password: {
+      type: String,
+      required: [true, 'La contraseña es obligatoria'],
+      minlength: [8, 'La contraseña debe tener al menos 8 caracteres'],
+      select: false, // nunca se devuelve por defecto en una query
+    },
+    nombre: {
+      type: String,
+      required: [true, 'El nombre es obligatorio'],
+      trim: true,
+    },
+    mail: {
+      type: String,
+      required: [true, 'El mail es obligatorio'],
+      unique: true,
+      lowercase: true,
+      trim: true,
+      match: [REGEX_MAIL, 'El formato del mail no es válido'],
+    },
+    telefono: {
+      type: String,
+      required: [true, 'El teléfono es obligatorio'],
+      trim: true,
+    },
+    estado: {
+      type: String,
+      enum: Object.values(ESTADOS_USUARIO),
+      default: ESTADOS_USUARIO.ACTIVO,
+    },
+  },
+  opcionesUsuario
+);
 
-  const Admin = Usuario.discriminator(TIPOS_USUARIO.ADMIN, new Schema({}));
+// Hashea la contraseña antes de guardar, solo si fue creada o modificada.
+usuarioSchema.pre('save', async function hashPassword(next) {
+  if (!this.isModified('password')) return next();
 
-  export { Usuario, Jugador, Lugar, Admin };
+  try {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
 
-*/
+// Método de instancia para el login: compara la contraseña en texto plano contra el hash.
+// Requiere haber pedido el usuario con .select('+password'), porque el campo tiene select:false.
+usuarioSchema.methods.compararPassword = function compararPassword(passwordPlano) {
+  return bcrypt.compare(passwordPlano, this.password);
+};
+
+export const Usuario = model('Usuario', usuarioSchema);
+
+// --- Discriminator: Jugador ---
+const jugadorSchema = new Schema({
+  apellido: {
+    type: String,
+    required: [true, 'El apellido es obligatorio'],
+    trim: true,
+  },
+  estadisticas: {
+    partidos_jugados: { type: Number, default: 0, min: 0 },
+    partidos_ganados: { type: Number, default: 0, min: 0 },
+    partidos_empatados: { type: Number, default: 0, min: 0 },
+    partidos_perdidos: { type: Number, default: 0, min: 0 },
+    cantidad_MVPS: { type: Number, default: 0, min: 0 },
+  },
+  // Referencias, no documentos embebidos: evita duplicar datos de Partido/Equipo que
+  // quedarían desactualizados, y evita filtrar campos sensibles (ver analisis-diseno.md, pto. 3).
+  historial: [{ type: Schema.Types.ObjectId, ref: 'Partido' }],
+  equipos_conformados: [{ type: Schema.Types.ObjectId, ref: 'Equipo' }],
+  // Nota de visibilidad: "historial" es público solo para el dueño del perfil, no para
+  // terceros que ven "otros perfiles". Esa proyección se decide en el controller/service
+  // según quién hace el pedido -- no se puede resolver acá con select:false (eso lo
+  // ocultaría también para el propio dueño).
+});
+
+export const Jugador = Usuario.discriminator(TIPOS_USUARIO.JUGADOR, jugadorSchema);
+
+// --- Discriminator: Lugar ---
+const lugarSchema = new Schema({
+  disponibilidad: [
+    {
+      _id: false,
+      dia: {
+        type: String,
+        enum: ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'],
+        required: true,
+      },
+      hora: { type: String, required: true }, // formato "HH:mm"
+      tipo_cancha: { type: Number, enum: TAMANIOS_EQUIPO, required: true },
+    },
+  ],
+});
+
+export const Lugar = Usuario.discriminator(TIPOS_USUARIO.LUGAR, lugarSchema);
+
+// --- Discriminator: Admin ---
+const adminSchema = new Schema({});
+
+export const Admin = Usuario.discriminator(TIPOS_USUARIO.ADMIN, adminSchema);
+
+export default Usuario;
