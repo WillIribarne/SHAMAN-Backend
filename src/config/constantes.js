@@ -1,11 +1,8 @@
-/**
- * Constantes compartidas por todos los modelos.
- *
- * Por qué existe este archivo: en el boceto original cada colección escribía sus propios
- * estados como texto libre ("Eliminado" en una, "eliminado" en otra), lo que tarde o
- * temprano genera bugs de comparación de strings. Centralizarlos acá los deja en un solo
- * lugar, todos en minúsculas, y sirve como fuente única para los `enum` de Mongoose.
- */
+/** Constantes compartidas por todos los modelos. */
+
+/* -- Usadas para evitar irregularidades de comparación, y para la asignación de enums en los Schemas de los modelos (export) --*/
+
+/* Object.freeze() hace que los campos del objeto DE PRIMER NIVEL no sean modificables. Const solamente impide la reasignación, pero si es un objeto, no impide que los campos de éste se modifiquen */
 
 // Tipo de usuario (discriminador de la colección "usuarios")
 export const TIPOS_USUARIO = Object.freeze({

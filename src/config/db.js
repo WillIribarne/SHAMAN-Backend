@@ -1,35 +1,26 @@
 import mongoose from 'mongoose';
 
-/**
- * Conexión con MongoDB (Atlas en producción/desarrollo).
- * La cadena de conexión vive en la variable de entorno MONGO_URI (ver .env / .env.example).
- * El cluster de Atlas todavía no existe -> hasta que MONGO_URI tenga un valor real,
- * connectDB() va a fallar al conectar. Eso es esperado en este punto del proyecto.
- */
+/* Conexión con MongoDB (Atlas) | La cadena de conexión vive en la variable de entorno MONGO_URI (en .env) */
+
 export async function connectDB() {
   const uri = process.env.MONGO_URI;
-
   if (!uri) {
-    throw new Error(
-      'Falta la variable de entorno MONGO_URI. Copiá .env.example a .env y completá la cadena de conexión de MongoDB Atlas.'
-    );
+    throw new Error('Falta la variable de entorno MONGO_URI.');
   }
 
-  mongoose.connection.on('connected', () => {
+  mongoose.connection.on('connected', () => { /* listener para cuando se conecte */
     console.log(`[db] Conectado a MongoDB (${mongoose.connection.name})`);
   });
 
-  mongoose.connection.on('error', (error) => {
+  mongoose.connection.on('error', (error) => { /* listener para cuando se crashea */
     console.error('[db] Error de conexión a MongoDB:', error.message);
   });
 
-  mongoose.connection.on('disconnected', () => {
+  mongoose.connection.on('disconnected', () => { /* listener para cuando se desconecta */
     console.warn('[db] Desconectado de MongoDB');
   });
 
   await mongoose.connect(uri);
-
-  return mongoose.connection;
 }
 
 export default connectDB;
