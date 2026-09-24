@@ -1,11 +1,13 @@
 import 'dotenv/config';
 import express from 'express';
 import { connectDB } from './config/db.js';
+import usuariosRouter from './routes/usuarioRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
 
 app.use(express.json());
+app.use('/api/usuarios', usuariosRouter);
 
 // Endpoint mínimo para verificar que el servidor (y, más adelante, la conexión a la DB)
 // está levantado. Se puede borrar o mover a routes/ cuando arranquen las rutas reales.

@@ -63,18 +63,20 @@ const usuarioSchema = new Schema(
   },
   opcionesUsuario
 );
-
+// *********************** 
 // Hashea la contraseña antes de guardar, solo si fue creada o modificada.
 usuarioSchema.pre('save', async function hashPassword(next) {
-  if (!this.isModified('password')) return next();
+  if (!this.isModified('password')) return /*next()*/;
 
-  try {
+  /*try {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
     next();
   } catch (error) {
     next(error);
-  }
+  }*/
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
 });
 
 // Método de instancia para el login: compara la contraseña en texto plano contra el hash.
