@@ -4,17 +4,13 @@ import { TIPOS_USUARIO, ESTADOS_USUARIO, TAMANIOS_EQUIPO } from '../config/const
 
 const { Schema, model } = mongoose;
 
-const REGEX_MAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const REGEX_MAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // se usa para validar el mail
 
-// Colección única "usuarios", con 3 tipos (jugador/lugar/admin) implementados como
-// discriminators de Mongoose: comparten esta colección física, pero cada uno valida y
-// devuelve solo sus propios campos (ver informe/analisis-diseno.md, punto 1).
 const opcionesUsuario = {
-  discriminatorKey: 'tipo',
+  discriminatorKey: 'tipo', // Jugador|Lugar|Admin. sirve para crear un campo 'tipo' con lógica de Mongoose implementada. Esto permite, por ejemplo hacer: Jugador.apellido, Lugar.find()
   timestamps: true,
-  toJSON: {
-    // Nunca devolver el hash de la contraseña, aunque alguna query lo haya pedido a propósito.
-    transform: (_doc, ret) => {
+  toJSON: { // modifica el comportamiento de res.json()
+    transform: (_doc, ret) => { // esto descomprime el JSON, pero sacandole la password para que no figure en la response (la clave nunca sale del servidor)
       delete ret.password;
       return ret;
     },
@@ -35,7 +31,7 @@ const usuarioSchema = new Schema(
       type: String,
       required: [true, 'La contraseña es obligatoria'],
       minlength: [8, 'La contraseña debe tener al menos 8 caracteres'],
-      select: false, // nunca se devuelve por defecto en una query
+      select: false, // Usuario.find() NO retorna la password. La unica forma es Usuario.find().select('+password')
     },
     nombre: {
       type: String,
@@ -48,7 +44,7 @@ const usuarioSchema = new Schema(
       unique: true,
       lowercase: true,
       trim: true,
-      match: [REGEX_MAIL, 'El formato del mail no es válido'],
+      match: [REGEX_MAIL, 'El formato del mail no es válido'], /* al hacer save() o create(), se ejecuta un .test() de todos los match. Si falla, lanza un Validation error*/
     },
     telefono: {
       type: String,
@@ -78,7 +74,7 @@ usuarioSchema.methods.compararPassword = function compararPassword(passwordPlano
   return bcrypt.compare(passwordPlano, this.password);
 };
 
-export const Usuario = model('Usuario', usuarioSchema);
+
 
 // --- Discriminator: Jugador ---
 const jugadorSchema = new Schema({
@@ -122,11 +118,10 @@ const lugarSchema = new Schema({
   ],
 });
 
-export const Lugar = Usuario.discriminator(TIPOS_USUARIO.LUGAR, lugarSchema);
-
 // --- Discriminator: Admin ---
 const adminSchema = new Schema({});
 
+export const Usuario = model('Usuario', usuarioSchema);
+export const Lugar = Usuario.discriminator(TIPOS_USUARIO.LUGAR, lugarSchema);
 export const Admin = Usuario.discriminator(TIPOS_USUARIO.ADMIN, adminSchema);
-
 export default Usuario;

@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-/* Conexión con MongoDB (Atlas) | La cadena de conexión vive en la variable de entorno MONGO_URI (en .env) */
+/* Conexión con MongoDB (Atlas) - requiere MONGO_URI en .env */
 
 export async function connectDB() {
   const uri = process.env.MONGO_URI;
