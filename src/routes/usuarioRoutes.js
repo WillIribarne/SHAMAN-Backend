@@ -3,7 +3,7 @@ import { registrarUsuario, eliminarUsuario } from '../controllers/usuarioControl
 
 const router = Router();
 
-// POST /api/usuarios/registro -> crear usuario (jugador/lugar)
+// POST /api/usuarios/registro -> crear usuario (solo jugador o lugar; un admin no se autoregistra)
 router.post('/registro', registrarUsuario);
 
 // POST /api/usuarios/login -> iniciar sesión
@@ -17,8 +17,11 @@ router.get('/:id', obtenerUsuarioPorId);
 
 // PUT /api/usuarios/:id -> modificar perfil propio
 router.put('/:id', modificarUsuario);
+*/
 
 // DELETE /api/usuarios/:id -> baja lógica (solo admin)
-router.delete('/:id', eliminarUsuario);*/
+// PENDIENTE: cuando exista el login, protegerla con verificarToken + chequeo de rol admin.
+// Por ahora queda abierta para poder probarla en Postman.
+router.delete('/:id', eliminarUsuario);
 
-export default router; 
+export default router;

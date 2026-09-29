@@ -63,18 +63,11 @@ const usuarioSchema = new Schema(
   },
   opcionesUsuario
 );
-// *********************** 
 // Hashea la contraseña antes de guardar, solo si fue creada o modificada.
-usuarioSchema.pre('save', async function hashPassword(next) {
-  if (!this.isModified('password')) return /*next()*/;
+// En Mongoose 9 los hooks async no reciben next(): alcanza con terminar (o lanzar un error).
+usuarioSchema.pre('save', async function hashPassword() {
+  if (!this.isModified('password')) return;
 
-  /*try {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-  } catch (error) {
-    next(error);
-  }*/
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
 });
