@@ -100,7 +100,7 @@ const jugadorSchema = new Schema({
   // ocultaría también para el propio dueño).
 });
 
-export const Jugador = Usuario.discriminator(TIPOS_USUARIO.JUGADOR, jugadorSchema);
+//export const Jugador = Usuario.discriminator(TIPOS_USUARIO.JUGADOR, jugadorSchema);
 
 // --- Discriminator: Lugar ---
 const lugarSchema = new Schema({
@@ -122,6 +122,7 @@ const lugarSchema = new Schema({
 const adminSchema = new Schema({});
 
 export const Usuario = model('Usuario', usuarioSchema);
+export const Jugador = Usuario.discriminator(TIPOS_USUARIO.JUGADOR, jugadorSchema);
 export const Lugar = Usuario.discriminator(TIPOS_USUARIO.LUGAR, lugarSchema);
 export const Admin = Usuario.discriminator(TIPOS_USUARIO.ADMIN, adminSchema);
 export default Usuario;
