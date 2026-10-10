@@ -21,8 +21,6 @@ router.get('/:id', verificarToken, obtenerUsuarioPorId);
 router.put('/:id', verificarToken, verificarPropioUsuarioOAdmin, modificarUsuario);
 
 // DELETE /api/usuarios/:id -> baja lógica (solo admin)
-// PENDIENTE: cuando exista el login, protegerla con verificarToken + chequeo de rol admin.
-// Por ahora queda abierta para poder probarla en Postman.
 router.delete('/:id', verificarToken, verificarAdmin, eliminarUsuario);
 
 // SOLO PARA DESARROLLO, SACAR ANTES DE PRODUCCIÓN
