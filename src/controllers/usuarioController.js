@@ -1,4 +1,5 @@
 import * as usuarioService from '../services/usuarioService.js';
+import jwt from 'jsonwebtoken';
 
 // Traduce un error (propio o de Mongoose/MongoDB) a status HTTP + mensaje para el cliente.
 const responderError = (res, error) => {
