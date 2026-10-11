@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import { connectDB } from './config/db.js';
 import usuariosRouter from './routes/usuarioRoutes.js';
+import equiposRouter from './routes/equipoRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -10,6 +11,7 @@ const PORT = process.env.PORT || 4000;
 app.use(cors()); // permite que el frontend (otro origen/puerto) consuma la API
 app.use(express.json());
 app.use('/api/usuarios', usuariosRouter);
+app.use('/api/equipos', equiposRouter);
 
 // Endpoint mínimo para verificar que el servidor está levantado.
 app.get('/toyvivo', (_req, res) => {

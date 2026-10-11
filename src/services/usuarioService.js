@@ -1,9 +1,8 @@
 import mongoose from 'mongoose';
 import { Usuario, Jugador, Lugar } from '../models/usuarioModel.js';
 import { TIPOS_USUARIO, ESTADOS_USUARIO } from '../config/constantes.js';
-
-// Crea un Error con un código HTTP asociado, para que el controller sepa qué status devolver.
-const crearError = (mensaje, status) => Object.assign(new Error(mensaje), { status });
+import { crearError } from '../utils/crearError.js';
+import { obtenerTodos, obtenerPorId, modificar, eliminar } from '../utils/globalService.js';
 
 // Tipos que se pueden crear desde el registro público. Un Admin NO puede autoregistrarse:
 // si alguien manda "tipo": "admin", se rechaza igual que un tipo inexistente.
@@ -40,45 +39,11 @@ export const loginUsuario = async ({ mail, password }) => {
     return usuario;
 };
 
-export const obtenerUsuarios = async () => {
-    return await Usuario.find({ estado: 'activo' });
-};
+export const obtenerUsuarios = () => obtenerTodos(Usuario, { estado: 'activo' });
 
-export const obtenerUsuarioPorId = async (id) => {
-    if (!mongoose.isValidObjectId(id)) {
-        throw crearError('ID de usuario inválido', 400);
-    }
-    
-    const usuario = await Usuario.findById(id);
-    if (!usuario) throw crearError('Usuario no encontrado');
-    return usuario;
-};
+export const obtenerUsuarioPorId = (id) => obtenerPorId(Usuario, id);
 
-export const modificarUsuario = async (id, datos) => {
-    if (!mongoose.isValidObjectId(id)) {
-        throw crearError('ID de usuario inválido', 400);
-    }
+export const modificarUsuario = (id, datos) => modificar(Usuario, id, datos);
 
-    const usuario = await Usuario.findByIdAndUpdate(id, datos, { new: true });
-    if (!usuario) throw crearError('Usuario no encontrado');
-    return usuario;
-};
+export const eliminarUsuario = (id) => eliminar(Usuario, id, ESTADOS_USUARIO.ACTIVO, ESTADOS_USUARIO.ELIMINADO);
 
-// Baja lógica: no se borra el documento, se cambia su estado a "eliminado".
-export const eliminarUsuario = async (id) => {
-  if (!mongoose.isValidObjectId(id)) {
-    throw crearError('ID de usuario inválido', 400);
-  }
-
-  const usuario = await Usuario.findOneAndUpdate(
-    { _id: id, estado: ESTADOS_USUARIO.ACTIVO },
-    { estado: ESTADOS_USUARIO.ELIMINADO },
-    { returnDocument: 'after' } // devuelve el documento ya actualizado
-  );
-
-  if (!usuario) {
-    throw crearError('Usuario no encontrado o ya eliminado', 404);
-  }
-
-  return usuario;
-};
