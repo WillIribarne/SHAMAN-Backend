@@ -66,7 +66,7 @@ export const bajarsedelPartido = async (req, res) => {
 
 export const aprobarPartido = async (req, res) => {
     try {
-        const partido = await partidoService.aprobarPartido(req.params.id);
+        const partido = await partidoService.aprobarPartido(req.params.id, req.user.id);
         res.status(200).json(partido);
     } catch (error) {
         responderError(res, error);

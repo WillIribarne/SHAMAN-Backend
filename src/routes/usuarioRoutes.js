@@ -17,7 +17,7 @@ router.put('/:id', verificarToken, verificarPropioUsuarioOAdmin, modificarUsuari
 
 router.delete('/:id', verificarToken, verificarAdmin, eliminarUsuario);
 
-// SOLO PARA DESARROLLO, SACAR ANTES DE PRODUCCIÓN
+// ESTO LO PUSE PARA CREAR UN ADMIN, DESP LO SACO
 /*router.post('/crear-admin', async (req, res) => {
     try {
         const admin = await Admin.create(req.body);

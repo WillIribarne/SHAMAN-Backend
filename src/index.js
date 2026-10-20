@@ -5,6 +5,7 @@ import { connectDB } from './config/db.js';
 import usuariosRouter from './routes/usuarioRoutes.js';
 import equiposRouter from './routes/equipoRoutes.js';
 import partidosRouter from './routes/partidoRoutes.js';
+import mensajesRouter from './routes/mensajeRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -14,6 +15,7 @@ app.use(express.json());
 app.use('/api/usuarios', usuariosRouter);
 app.use('/api/equipos', equiposRouter);
 app.use('/api/partidos', partidosRouter);
+app.use('/api/mensajes', mensajesRouter);
 
 // Endpoint mínimo para verificar que el servidor está levantado.
 app.get('/toyvivo', (_req, res) => {

@@ -1,8 +1,9 @@
 import mongoose from 'mongoose';
 import { Partido } from '../models/partidoModel.js';
-import { ESTADOS_PARTIDO } from '../config/constantes.js';
+import { ESTADOS_PARTIDO, TIPOS_MENSAJE } from '../config/constantes.js';
 import { crearError } from '../utils/crearError.js';
 import { obtenerTodos, obtenerPorId, modificar } from '../utils/globalService.js';
+import { crearMensajeAutomatico } from './mensajeService.js';
 
 export const obtenerPartidos = () => obtenerTodos(Partido);
 export const obtenerPartidoPorId = (id) => obtenerPorId(Partido, id);
@@ -67,7 +68,7 @@ export const bajarsedelPartido = async (partidoId, jugadorId) => {
     return partido.save();
 };
 
-export const aprobarPartido = async (id) => {
+export const aprobarPartido = async (id, lugarId) => {
     if (!mongoose.isValidObjectId(id)) throw crearError('ID inválido', 400);
     const partido = await Partido.findOneAndUpdate(
         { _id: id, estado: ESTADOS_PARTIDO.PENDIENTE_APROBACION },
@@ -75,6 +76,16 @@ export const aprobarPartido = async (id) => {
         { returnDocument: 'after' }
     );
     if (!partido) throw crearError('Partido no encontrado o no está pendiente', 404);
+
+    // mensaje automático al creador
+    await crearMensajeAutomatico({
+        tipo: TIPOS_MENSAJE.CONFIRMACION_ENCUENTRO,
+        emisor: lugarId,
+        receptor: partido.creador,
+        id_referencia: partido._id,
+        id_referencia_tipo: 'Partido',
+        contenido: `Tu partido del ${partido.fecha_horario.toLocaleDateString()} fue confirmado por el lugar.`
+    });
     return partido;
 };
 
