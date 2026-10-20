@@ -5,22 +5,16 @@ import { verificarToken, verificarAdmin, verificarPropioUsuarioOAdmin } from '..
 
 const router = Router();
 
-// POST /api/usuarios/registro -> crear usuario (solo jugador o lugar; un admin no se autoregistra)
 router.post('/registro', registrarUsuario);
 
-// POST /api/usuarios/login -> iniciar sesión
 router.post('/login', loginUsuario);
 
-// GET /api/usuarios -> ver todos (solo admin)
 router.get('/', verificarToken, verificarAdmin, obtenerUsuarios);
 
-// GET /api/usuarios/:id -> ver perfil de uno
 router.get('/:id', verificarToken, obtenerUsuarioPorId);
 
-// PUT /api/usuarios/:id -> modificar perfil propio
 router.put('/:id', verificarToken, verificarPropioUsuarioOAdmin, modificarUsuario);
 
-// DELETE /api/usuarios/:id -> baja lógica (solo admin)
 router.delete('/:id', verificarToken, verificarAdmin, eliminarUsuario);
 
 // SOLO PARA DESARROLLO, SACAR ANTES DE PRODUCCIÓN

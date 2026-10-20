@@ -1,25 +1,35 @@
-/*import { Router } from 'express'; // trae solo Router de adentro de Express
+import { Router } from 'express';
+import {
+    crearPartido,
+    obtenerPartidos,
+    obtenerPartidoPorId,
+    modificarPartido,
+    eliminarPartido,
+    unirseAlPartido,
+    bajarsedelPartido,
+    aprobarPartido,
+    rechazarPartido
+} from '../controllers/partidoController.js';
+import { verificarToken, verificarAdmin, verificarCreadorOAdmin, verificarLugar } from '../middlewares/authMiddleware.js';
 
 const router = Router();
 
-router.post('/:id/unirse', unirseAPartido);
+router.post('/crear', verificarToken, crearPartido);
 
-router.post('/:id/bajarse', bajarseDePartido);
+router.get('/', obtenerPartidos);
 
-router.post('/:id/aprobar', aprobarPartido);
+router.get('/:id', obtenerPartidoPorId);
 
-router.post('/:id/rechazar', rechazarPartido);
+router.put('/:id', verificarToken, verificarCreadorOAdmin, modificarPartido);
 
-router.post('/:id/votar-mvp', votarMvpPartido);
+router.delete('/:id', verificarToken, verificarCreadorOAdmin, eliminarPartido);
 
-router.post('/:id', crearPartido);
+router.post('/:id/unirse', verificarToken, unirseAlPartido);
 
-router.get('/', verPartidos);
+router.post('/:id/bajarse', verificarToken, bajarsedelPartido);
 
-router.get('/:id', verPartidoPorId);
+router.post('/:id/aprobar', verificarToken, verificarLugar, aprobarPartido);
 
-router.put('/:id', modificarPartido);
+router.post('/:id/rechazar', verificarToken, verificarLugar, rechazarPartido);
 
-router.delete('/:id', eliminarPartido);
-
-export default router;*/
+export default router;

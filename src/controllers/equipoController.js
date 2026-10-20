@@ -12,7 +12,7 @@ export const crearEquipo = async (req, res) => {
 
 export const agregarJugadorAlEquipo = async (req, res) => {
   try {
-    const equipo = await equipoService.agregarJugadorAlEquipo(req.params.id, req.body.id);
+    const equipo = await equipoService.agregarJugadorAlEquipo(req.params.id, req.body.jugadorId);
     res.status(201).json(equipo);
   } catch (error) {
     responderError(res, error);
