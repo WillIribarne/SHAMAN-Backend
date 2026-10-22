@@ -10,10 +10,21 @@ export const obtenerPartidoPorId = (id) => obtenerPorId(Partido, id);
 export const modificarPartido = (id, datos) => modificar(Partido, id, datos);
 
 export const crearPartido = async (datos, creadorId) => {
-    return Partido.create({ ...datos, creador: creadorId });
+    const partido = await Partido.create({ ...datos, creador: creadorId });
+
+    await crearMensajeAutomatico({
+        tipo: TIPOS_MENSAJE.INVITACION_ENCUENTRO,
+        emisor: creadorId,
+        receptor: partido.lugar,
+        id_referencia: partido._id,
+        id_referencia_tipo: 'Partido',
+        contenido: `Tenés una nueva solicitud de partido para el ${partido.fecha_horario.toLocaleDateString()}.`
+    });
+
+    return partido;
 };
 
-export const eliminarPartido = async (id) => {
+export const eliminarPartido = async (id, usuarioId) => {
     if (!mongoose.isValidObjectId(id)) throw crearError('ID inválido', 400);
     const partido = await Partido.findByIdAndUpdate(
         id,
@@ -21,6 +32,21 @@ export const eliminarPartido = async (id) => {
         { returnDocument: 'after' }
     );
     if (!partido) throw crearError('Partido no encontrado', 404);
+
+    // avisamos a todos los jugadores de ambos equipos
+    const todosLosJugadores = [...partido.jugadores_equipo1, ...partido.jugadores_equipo2];
+    
+    await Promise.all(todosLosJugadores.map(jugadorId =>
+        crearMensajeAutomatico({
+            tipo: TIPOS_MENSAJE.CANCELACION_ENCUENTRO,
+            emisor: usuarioId,
+            receptor: jugadorId,
+            id_referencia: partido._id,
+            id_referencia_tipo: 'Partido',
+            contenido: `El partido del ${partido.fecha_horario.toLocaleDateString()} fue cancelado.`
+        })
+    ));
+
     return partido;
 };
 
@@ -45,7 +71,18 @@ export const unirseAlPartido = async (partidoId, jugadorId, numeroEquipo) => {
     }
 
     partido[equipo].push(jugadorId);
-    return partido.save();
+    await partido.save();
+
+    await crearMensajeAutomatico({
+        tipo: TIPOS_MENSAJE.MODIFICACION_ENCUENTRO,
+        emisor: jugadorId,
+        receptor: partido.creador,
+        id_referencia: partido._id,
+        id_referencia_tipo: 'Partido',
+        contenido: `Un jugador se unió a tu partido del ${partido.fecha_horario.toLocaleDateString()}.`
+    });
+
+    return partido;
 };
 
 export const bajarsedelPartido = async (partidoId, jugadorId) => {
@@ -89,7 +126,7 @@ export const aprobarPartido = async (id, lugarId) => {
     return partido;
 };
 
-export const rechazarPartido = async (id) => {
+export const rechazarPartido = async (id, lugarId) => {
     if (!mongoose.isValidObjectId(id)) throw crearError('ID inválido', 400);
     const partido = await Partido.findOneAndUpdate(
         { _id: id, estado: ESTADOS_PARTIDO.PENDIENTE_APROBACION },
@@ -97,5 +134,15 @@ export const rechazarPartido = async (id) => {
         { returnDocument: 'after' }
     );
     if (!partido) throw crearError('Partido no encontrado o no está pendiente', 404);
+
+    await crearMensajeAutomatico({
+        tipo: TIPOS_MENSAJE.CANCELACION_ENCUENTRO,
+        emisor: lugarId,
+        receptor: partido.creador,
+        id_referencia: partido._id,
+        id_referencia_tipo: 'Partido',
+        contenido: `Tu partido del ${partido.fecha_horario.toLocaleDateString()} fue rechazado por el lugar.`
+    });
+
     return partido;
 };
