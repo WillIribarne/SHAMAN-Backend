@@ -1,15 +1,11 @@
-import * as usuarioService from '../services/usuarioService.js';
 import jwt from 'jsonwebtoken';
+import * as usuarioService from '../services/usuarioService.js';
 import { responderError } from '../utils/responderError.js';
+import { manejarRuta } from '../utils/globalController.js';
 
-export const registrarUsuario = async (req, res) => {
-  try {
-    const usuario = await usuarioService.registrarUsuario(req.body);
-    res.status(201).json(usuario);
-  } catch (error) {
-    responderError(res, error);
-  }
-};
+export const registrarUsuario = manejarRuta(
+    (req) => usuarioService.registrarUsuario(req.body), 201
+);
 
 export const loginUsuario = async (req, res) => {
   try {
@@ -25,32 +21,17 @@ export const loginUsuario = async (req, res) => {
   }
 };
 
-export const obtenerUsuarios = async (req, res) => {
-    try {
-        const usuarios = await usuarioService.obtenerUsuarios();
-        res.status(200).json(usuarios);
-    } catch (error) {
-      responderError(res, error);
-    }
-};
+export const obtenerUsuarios = manejarRuta(
+    () => usuarioService.obtenerUsuarios()
+);
 
-export const obtenerUsuarioPorId = async (req, res) => {
-    try {
-        const usuario = await usuarioService.obtenerUsuarioPorId(req.params.id);
-        res.status(200).json(usuario);
-    } catch (error) {
-      responderError(res, error);
-    }
-};
+export const obtenerUsuarioPorId = manejarRuta(
+    (req) => usuarioService.obtenerUsuarioPorId(req.params.id)
+);
 
-export const modificarUsuario = async (req, res) => {
-    try {
-        const usuario = await usuarioService.modificarUsuario(req.params.id, req.body);
-        res.status(200).json(usuario);
-    } catch (error) {
-      responderError(res, error);
-    }
-};
+export const modificarUsuario = manejarRuta(
+    (req) => usuarioService.modificarUsuario(req.params.id, req.body)
+);
 
 export const eliminarUsuario = async (req, res) => {
   try {

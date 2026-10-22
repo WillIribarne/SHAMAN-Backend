@@ -1,32 +1,18 @@
 import * as mensajeService from '../services/mensajeService.js';
 import { responderError } from '../utils/responderError.js';
+import { manejarRuta } from '../utils/globalController.js';
 
-export const obtenerMisMensajes = async (req, res) => {
-    try {
-        const mensajes = await mensajeService.obtenerMisMensajes(req.user.id);
-        res.status(200).json(mensajes);
-    } catch (error) {
-        responderError(res, error);
-    }
-};
+export const obtenerMisMensajes = manejarRuta(
+    (req) => mensajeService.obtenerMisMensajes(req.user.id)
+);
 
-export const obtenerMensajePorId = async (req, res) => {
-    try {
-        const mensaje = await mensajeService.obtenerMensajePorId(req.params.id, req.user.id);
-        res.status(200).json(mensaje);
-    } catch (error) {
-        responderError(res, error);
-    }
-};
+export const obtenerMensajePorId = manejarRuta(
+    (req) => mensajeService.obtenerMensajePorId(req.params.id, req.user.id)
+);
 
-export const marcarComoLeido = async (req, res) => {
-    try {
-        const mensaje = await mensajeService.marcarComoLeido(req.params.id, req.user.id);
-        res.status(200).json(mensaje);
-    } catch (error) {
-        responderError(res, error);
-    }
-};
+export const marcarComoLeido = manejarRuta(
+    (req) => mensajeService.marcarComoLeido(req.params.id, req.user.id)
+);
 
 export const eliminarMensaje = async (req, res) => {
     try {
