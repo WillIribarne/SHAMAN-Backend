@@ -16,6 +16,4 @@ router.put('/:id', verificarToken, verificarPropioUsuarioOAdmin, modificarUsuari
 
 router.delete('/:id', verificarToken, verificarAdmin, eliminarUsuario);
 
-// Para crear un admin: npm run crear-admin (ver src/scripts/crearAdmin.js)
-
 export default router;

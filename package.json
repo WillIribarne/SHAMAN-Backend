@@ -17,8 +17,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "devstart": "node --watch src/index",
-    "start": "node src/index",
-    "crear-admin": "node src/scripts/crearAdmin.js"
+    "start": "node src/index"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

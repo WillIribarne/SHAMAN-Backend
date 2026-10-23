@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import { Partido } from '../models/partidoModel.js';
 import { ESTADOS_PARTIDO, TIPOS_MENSAJE } from '../config/constantes.js';
 import { crearError } from '../utils/crearError.js';
+import { quitarUndefined } from '../utils/quitarUndefined.js';
 import { obtenerTodos, obtenerPorId } from '../utils/globalService.js';
 import { crearMensajeAutomatico } from './mensajeService.js';
 
@@ -32,8 +33,8 @@ export const modificarPartido = async (id, datos = {}) => {
         throw crearError(`Ya hay ${cantidadMaxAnotados} jugadores anotados en un equipo, no se puede achicar a ${jugadores_por_equipo}`, 400);
     }
 
-    // set() ignora las claves con valor undefined, así que solo cambia lo que vino en el body
-    partido.set({ fecha_horario, lugar, jugadores_por_equipo, accesibilidad });
+    // Solo se cambia lo que vino en el body (los campos que no vinieron quedan como estaban)
+    partido.set(quitarUndefined({ fecha_horario, lugar, jugadores_por_equipo, accesibilidad }));
     return partido.save(); // save() corre las validaciones (fecha futura, enums, etc.)
 };
 

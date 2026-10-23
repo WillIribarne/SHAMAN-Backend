@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import { Equipo } from '../models/equipoModel.js';
 import { ESTADOS_EQUIPO } from '../config/constantes.js';
 import { crearError } from '../utils/crearError.js';
+import { quitarUndefined } from '../utils/quitarUndefined.js';
 import { obtenerTodos, obtenerPorId, eliminar } from '../utils/globalService.js';
 
 
@@ -66,8 +67,8 @@ export const modificarEquipo = async (id, datos = {}) => {
         throw crearError(`El equipo ya tiene ${equipo.integrantes.length} integrantes, no se puede achicar a ${jugadores_por_equipo}`, 400);
     }
 
-    // set() ignora las claves con valor undefined, así que solo cambia lo que vino en el body
-    equipo.set({ nombre, jugadores_por_equipo });
+    // Solo se cambia lo que vino en el body (los campos que no vinieron quedan como estaban)
+    equipo.set(quitarUndefined({ nombre, jugadores_por_equipo }));
     return equipo.save(); // save() corre las validaciones del Schema (enum de tamaños, etc.)
 };
 
