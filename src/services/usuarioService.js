@@ -27,13 +27,20 @@ export const registrarUsuario = async (datos = {}) => {
   return Modelo.create(camposPermitidos);
 };
 
-export const loginUsuario = async ({ mail, password } = {}) => {
-    if (!mail || !password) throw crearError('Mail y contraseña son obligatorios', 400);
+// Se puede iniciar sesión con el mail o con el username: el body trae uno de los dos.
+export const loginUsuario = async ({ mail, username, password } = {}) => {
+    const identificador = mail ?? username;
+    if (!identificador || !password) throw crearError('Mail (o username) y contraseña son obligatorios', 400);
 
+    // Ambos campos se guardan en minúsculas (lowercase en el Schema), así que se compara igual.
+    // $or: busca un usuario cuyo mail O cuyo username coincida con lo que se mandó.
     // select('+password') porque el campo tiene select:false en el modelo.
     // Solo usuarios activos: una cuenta dada de baja (borrado lógico) no puede loguearse.
-    const usuario = await Usuario.findOne({ mail: mail.toLowerCase(), estado: ESTADOS_USUARIO.ACTIVO })
-        .select('+password');
+    const valor = String(identificador).toLowerCase().trim();
+    const usuario = await Usuario.findOne({
+        $or: [{ mail: valor }, { username: valor }],
+        estado: ESTADOS_USUARIO.ACTIVO,
+    }).select('+password');
 
     // Mismo mensaje para "no existe" y "contraseña incorrecta": así no se revela qué mails
     // están registrados. 401 = no autenticado.
