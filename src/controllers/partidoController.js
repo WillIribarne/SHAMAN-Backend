@@ -40,5 +40,5 @@ export const aprobarPartido = manejarRuta(
 );
 
 export const rechazarPartido = manejarRuta(
-    (req) => partidoService.rechazarPartido(req.params.id)
+    (req) => partidoService.rechazarPartido(req.params.id, req.user.id)
 );

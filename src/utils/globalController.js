@@ -1,3 +1,4 @@
+import { responderError } from './responderError.js';
 
 export const manejarRuta = (fn, status = 200) => {
     return async (req, res) => {

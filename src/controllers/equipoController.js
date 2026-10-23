@@ -26,5 +26,5 @@ export const agregarJugadorAlEquipo = manejarRuta(
 );
 
 export const eliminarJugadorDelEquipo = manejarRuta(
-    (req) => equipoService.eliminarJugadorDelEquipo(req.params.id, req.params.jugadorId)
+    (req) => equipoService.quitarJugador(req.params.id, req.params.jugadorId)
 );

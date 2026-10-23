@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import { Usuario, Jugador, Lugar } from '../models/usuarioModel.js';
 import { TIPOS_USUARIO, ESTADOS_USUARIO } from '../config/constantes.js';
 import { crearError } from '../utils/crearError.js';
-import { obtenerTodos, obtenerPorId, modificar, eliminar } from '../utils/globalService.js';
+import { obtenerTodos, obtenerPorId, eliminar } from '../utils/globalService.js';
 
 // Tipos que se pueden crear desde el registro público. Un Admin NO puede autoregistrarse:
 // si alguien manda "tipo": "admin", se rechaza igual que un tipo inexistente.
@@ -27,14 +27,18 @@ export const registrarUsuario = async (datos = {}) => {
   return Modelo.create(camposPermitidos);
 };
 
-export const loginUsuario = async ({ mail, password }) => {
-    // select('+password') porque el campo tiene select:false en el modelo
-    const usuario = await Usuario.findOne({ mail }).select('+password');
+export const loginUsuario = async ({ mail, password } = {}) => {
+    if (!mail || !password) throw crearError('Mail y contraseña son obligatorios', 400);
 
-    if (!usuario) throw crearError('Usuario no encontrado');
+    // select('+password') porque el campo tiene select:false en el modelo.
+    // Solo usuarios activos: una cuenta dada de baja (borrado lógico) no puede loguearse.
+    const usuario = await Usuario.findOne({ mail: mail.toLowerCase(), estado: ESTADOS_USUARIO.ACTIVO })
+        .select('+password');
 
-    const passwordValida = await usuario.compararPassword(password);
-    if (!passwordValida) throw crearError(`Contraseña incorrecta`);
+    // Mismo mensaje para "no existe" y "contraseña incorrecta": así no se revela qué mails
+    // están registrados. 401 = no autenticado.
+    const passwordValida = usuario && await usuario.compararPassword(password);
+    if (!passwordValida) throw crearError('Credenciales inválidas', 401);
 
     return usuario;
 };
@@ -43,7 +47,22 @@ export const obtenerUsuarios = () => obtenerTodos(Usuario, { estado: 'activo' })
 
 export const obtenerUsuarioPorId = (id) => obtenerPorId(Usuario, id);
 
-export const modificarUsuario = (id, datos) => modificar(Usuario, id, datos);
+// No usa el modificar() genérico (findByIdAndUpdate) porque ese NO ejecuta el hook pre('save'):
+// si se cambiaba la password, quedaba guardada en texto plano. Con findById + save() se hashea
+// y además corren las validaciones del Schema.
+export const modificarUsuario = async (id, datos = {}) => {
+    if (!mongoose.isValidObjectId(id)) throw crearError('ID inválido', 400);
+
+    // Igual que en el registro: tipo y estado no se cambian por acá (el estado se maneja con
+    // DELETE), y estadísticas/historial/equipos los actualiza el sistema, no el usuario.
+    const { tipo, estado, estadisticas, historial, equipos_conformados, _id, ...camposPermitidos } = datos;
+
+    const usuario = await Usuario.findOne({ _id: id, estado: ESTADOS_USUARIO.ACTIVO });
+    if (!usuario) throw crearError('Usuario no encontrado', 404);
+
+    usuario.set(camposPermitidos);
+    return usuario.save();
+};
 
 export const eliminarUsuario = (id) => eliminar(Usuario, id, ESTADOS_USUARIO.ACTIVO, ESTADOS_USUARIO.ELIMINADO);
 

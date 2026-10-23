@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { crearError } from './crearError.js';
 
 export const obtenerTodos = async (Modelo, filtro = {}) => {
     return Modelo.find(filtro);

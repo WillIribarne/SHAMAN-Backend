@@ -130,7 +130,9 @@ export const rechazarPartido = async (id, lugarId) => {
     if (!mongoose.isValidObjectId(id)) throw crearError('ID inválido', 400);
     const partido = await Partido.findOneAndUpdate(
         { _id: id, estado: ESTADOS_PARTIDO.PENDIENTE_APROBACION },
-        { estado: ESTADOS_PARTIDO.CANCELADO },
+        // Según el diseño, un pendiente rechazado por el Lugar pasa a "eliminado". "cancelado" queda
+        // reservado para un partido ya confirmado que se da de baja antes de jugarse.
+        { estado: ESTADOS_PARTIDO.ELIMINADO },
         { returnDocument: 'after' }
     );
     if (!partido) throw crearError('Partido no encontrado o no está pendiente', 404);
