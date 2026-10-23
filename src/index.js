@@ -6,6 +6,7 @@ import usuariosRouter from './routes/usuarioRoutes.js';
 import equiposRouter from './routes/equipoRoutes.js';
 import partidosRouter from './routes/partidoRoutes.js';
 import mensajesRouter from './routes/mensajeRoutes.js';
+import { responderError } from './utils/responderError.js';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -20,6 +21,19 @@ app.use('/api/mensajes', mensajesRouter);
 // Endpoint mínimo para verificar que el servidor está levantado.
 app.get('/toyvivo', (_req, res) => {
   res.json({ status: 'gracias por darme vida' });
+});
+
+// Cualquier ruta que no matcheó con ninguna de las anteriores -> 404 en JSON
+// (sin esto, Express responde una página HTML "Cannot GET ...").
+app.use((req, res) => {
+  res.status(404).json({ error: `Ruta no encontrada: ${req.method} ${req.originalUrl}` });
+});
+
+// Manejador global de errores (Express lo reconoce por tener 4 parámetros). Atrapa lo que
+// no atrapó ningún controller: errores de los middlewares async, JSON mal formado en el
+// body, etc. Así la API siempre responde JSON con el mismo formato.
+app.use((err, _req, res, _next) => {
+  responderError(res, err);
 });
 
 async function iniciarServidor() {

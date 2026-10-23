@@ -2,12 +2,40 @@ import mongoose from 'mongoose';
 import { Partido } from '../models/partidoModel.js';
 import { ESTADOS_PARTIDO, TIPOS_MENSAJE } from '../config/constantes.js';
 import { crearError } from '../utils/crearError.js';
-import { obtenerTodos, obtenerPorId, modificar } from '../utils/globalService.js';
+import { obtenerTodos, obtenerPorId } from '../utils/globalService.js';
 import { crearMensajeAutomatico } from './mensajeService.js';
 
-export const obtenerPartidos = () => obtenerTodos(Partido);
+// Los partidos dados de baja lógica no se listan
+export const obtenerPartidos = () => obtenerTodos(Partido, { estado: { $ne: ESTADOS_PARTIDO.ELIMINADO } });
 export const obtenerPartidoPorId = (id) => obtenerPorId(Partido, id);
-export const modificarPartido = (id, datos) => modificar(Partido, id, datos);
+
+// Estados en los que un partido todavía se puede editar
+const ESTADOS_EDITABLES = [ESTADOS_PARTIDO.PENDIENTE_APROBACION, ESTADOS_PARTIDO.CONFIRMADO];
+
+// No usa el modificar() genérico (findByIdAndUpdate): ese no corre las validaciones del Schema
+// (se podía poner una fecha pasada) y deja cambiar cualquier campo (estado, creador, jugadores).
+// Acá solo se permiten los datos "de organización" del partido; el estado cambia por sus propios
+// endpoints (aprobar/rechazar/DELETE) y los jugadores con unirse/bajarse.
+export const modificarPartido = async (id, datos = {}) => {
+    if (!mongoose.isValidObjectId(id)) throw crearError('ID inválido', 400);
+
+    const { fecha_horario, lugar, jugadores_por_equipo, accesibilidad } = datos;
+
+    const partido = await Partido.findById(id);
+    if (!partido) throw crearError('Partido no encontrado', 404);
+    if (!ESTADOS_EDITABLES.includes(partido.estado)) {
+        throw crearError(`No se puede modificar un partido en estado "${partido.estado}"`, 400);
+    }
+
+    const cantidadMaxAnotados = Math.max(partido.jugadores_equipo1.length, partido.jugadores_equipo2.length);
+    if (jugadores_por_equipo !== undefined && cantidadMaxAnotados > jugadores_por_equipo) {
+        throw crearError(`Ya hay ${cantidadMaxAnotados} jugadores anotados en un equipo, no se puede achicar a ${jugadores_por_equipo}`, 400);
+    }
+
+    // set() ignora las claves con valor undefined, así que solo cambia lo que vino en el body
+    partido.set({ fecha_horario, lugar, jugadores_por_equipo, accesibilidad });
+    return partido.save(); // save() corre las validaciones (fecha futura, enums, etc.)
+};
 
 export const crearPartido = async (datos, creadorId) => {
     const partido = await Partido.create({ ...datos, creador: creadorId });
@@ -60,9 +88,18 @@ export const unirseAlPartido = async (partidoId, jugadorId, numeroEquipo) => {
         throw crearError('El partido no está confirmado', 400);
     }
 
-    const equipo = numeroEquipo === 1 ? 'jugadores_equipo1' : 'jugadores_equipo2';
+    // Antes cualquier valor distinto de 1 (incluso "1" como texto, o nada) caía en el equipo 2
+    const numero = Number(numeroEquipo);
+    if (numero !== 1 && numero !== 2) {
+        throw crearError('"equipo" debe ser 1 o 2', 400);
+    }
+    const equipo = numero === 1 ? 'jugadores_equipo1' : 'jugadores_equipo2';
 
-    if (partido[equipo].includes(jugadorId)) {
+    // Se revisan los DOS equipos: antes solo se miraba el elegido, y un jugador podía
+    // anotarse una vez en cada equipo del mismo partido.
+    const yaAnotado = [...partido.jugadores_equipo1, ...partido.jugadores_equipo2]
+        .some((j) => j.toString() === jugadorId);
+    if (yaAnotado) {
         throw crearError('Ya estás anotado en este partido', 400);
     }
 

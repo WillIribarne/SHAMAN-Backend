@@ -2,11 +2,17 @@ import mongoose from 'mongoose';
 import { Equipo } from '../models/equipoModel.js';
 import { ESTADOS_EQUIPO } from '../config/constantes.js';
 import { crearError } from '../utils/crearError.js';
-import { obtenerTodos, obtenerPorId, modificar, eliminar } from '../utils/globalService.js';
+import { obtenerTodos, obtenerPorId, eliminar } from '../utils/globalService.js';
 
 
-export const crearEquipo = async (datos, usuarioId) => {
+export const crearEquipo = async (datos = {}, usuarioId) => {
     const { nombre, jugadores_por_equipo, integrantes, capitan } = datos;
+
+    // Sin esta validación, si no mandan "integrantes" (o no es un array), el .includes()
+    // de abajo rompe con un TypeError y la API responde 500 en vez de 400.
+    if (!Array.isArray(integrantes) || integrantes.length === 0) {
+        throw crearError('"integrantes" debe ser una lista con al menos un jugador', 400);
+    }
 
     // el capitán tiene que ser uno de los integrantes
     if (!integrantes.includes(capitan)) {
@@ -41,11 +47,29 @@ export const agregarJugadorAlEquipo = async (equipoId, jugadorId) => {
     return equipo.save();
 };
 
-export const obtenerEquipos = () => obtenerTodos(Equipo, { estado: 'activo' });
+export const obtenerEquipos = () => obtenerTodos(Equipo, { estado: ESTADOS_EQUIPO.ACTIVO });
 
 export const obtenerEquipoPorId = (id) => obtenerPorId(Equipo, id);
 
-export const modificarEquipo = (id, datos) => modificar(Equipo, id, datos);
+// No usa el modificar() genérico (findByIdAndUpdate): ese no corre las validaciones del Schema
+// y deja cambiar cualquier campo. Acá solo se permite nombre y tamaño; los integrantes y el
+// capitán se manejan con sus propios endpoints, y el estado con DELETE.
+export const modificarEquipo = async (id, datos = {}) => {
+    if (!mongoose.isValidObjectId(id)) throw crearError('ID inválido', 400);
+
+    const { nombre, jugadores_por_equipo } = datos;
+
+    const equipo = await Equipo.findOne({ _id: id, estado: ESTADOS_EQUIPO.ACTIVO });
+    if (!equipo) throw crearError('Equipo no encontrado', 404);
+
+    if (jugadores_por_equipo !== undefined && equipo.integrantes.length > jugadores_por_equipo) {
+        throw crearError(`El equipo ya tiene ${equipo.integrantes.length} integrantes, no se puede achicar a ${jugadores_por_equipo}`, 400);
+    }
+
+    // set() ignora las claves con valor undefined, así que solo cambia lo que vino en el body
+    equipo.set({ nombre, jugadores_por_equipo });
+    return equipo.save(); // save() corre las validaciones del Schema (enum de tamaños, etc.)
+};
 
 export const eliminarEquipo = (id) => eliminar(Equipo, id, ESTADOS_EQUIPO.ACTIVO, ESTADOS_EQUIPO.ELIMINADO);
 

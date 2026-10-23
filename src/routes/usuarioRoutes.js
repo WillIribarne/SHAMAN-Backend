@@ -1,7 +1,6 @@
 import { Router } from 'express'; // trae solo Router de adentro de Express
 import { registrarUsuario, loginUsuario, obtenerUsuarios, obtenerUsuarioPorId, modificarUsuario, eliminarUsuario } from '../controllers/usuarioController.js';
 import { verificarToken, verificarAdmin, verificarPropioUsuarioOAdmin } from '../middlewares/authMiddleware.js';
-//import { Admin } from '../models/usuarioModel.js';
 
 const router = Router();
 
@@ -17,14 +16,6 @@ router.put('/:id', verificarToken, verificarPropioUsuarioOAdmin, modificarUsuari
 
 router.delete('/:id', verificarToken, verificarAdmin, eliminarUsuario);
 
-// ESTO LO PUSE PARA CREAR UN ADMIN, DESP LO SACO
-/*router.post('/crear-admin', async (req, res) => {
-    try {
-        const admin = await Admin.create(req.body);
-        res.status(201).json(admin);
-    } catch (e) {
-        res.status(400).json({ error: e.message });
-    }
-});*/
+// Para crear un admin: npm run crear-admin (ver src/scripts/crearAdmin.js)
 
 export default router;

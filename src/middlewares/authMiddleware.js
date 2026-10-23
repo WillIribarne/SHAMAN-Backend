@@ -74,8 +74,6 @@ export const verificarCreadorOAdmin = async (req, res, next) => {
         next();
     } else {
         const partido = await Partido.findById(req.params.id);
-        console.log('creador del partido:', partido?.creador.toString());
-        console.log('usuario logueado:', req.user.id);
         const esCreador = partido?.creador.toString() === req.user.id;
 
         if (esCreador) {

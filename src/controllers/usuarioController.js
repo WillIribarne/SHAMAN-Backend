@@ -26,7 +26,7 @@ export const obtenerUsuarios = manejarRuta(
 );
 
 export const obtenerUsuarioPorId = manejarRuta(
-    (req) => usuarioService.obtenerUsuarioPorId(req.params.id)
+    (req) => usuarioService.obtenerUsuarioPorId(req.params.id, req.user)
 );
 
 export const modificarUsuario = manejarRuta(

@@ -1,5 +1,5 @@
 {
-  "name": "proyecto-sin-nombre-backend",
+  "name": "shaman-backend",
   "version": "1.0.0",
   "description": "",
   "homepage": "https://github.com/WillIribarne/proyecto-sin-nombre-Backend#readme",
@@ -17,7 +17,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "devstart": "node --watch src/index",
-    "start": "node src/index"
+    "start": "node src/index",
+    "crear-admin": "node src/scripts/crearAdmin.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

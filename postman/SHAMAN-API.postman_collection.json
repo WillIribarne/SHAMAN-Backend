@@ -1,0 +1,2594 @@
+{
+  "info": {
+    "name": "SHAMAN API",
+    "_postman_id": "5a1e0c1e-shaman-progra3",
+    "description": "Requests de la API REST de SHAMANapp (Progra III).\n\nOrden recomendado: correr cada carpeta de arriba hacia abajo (o 'Run collection'). Los registros y logins guardan ids y tokens en las variables de la coleccion, que despues usan el resto de las requests.\n\nRequisito: el servidor corriendo (npm run devstart) y un admin creado en la base para las requests marcadas como (admin).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:4000/toyvivo",
+          "host": [
+            "localhost"
+          ],
+          "path": [
+            "toyvivo"
+          ],
+          "port": "4000",
+          "protocol": "http"
+        },
+        "description": "Verifica que el servidor esta levantado.",
+        "auth": {
+          "type": "noauth"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status esperado (200)', () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "1. Usuarios",
+      "item": [
+        {
+          "name": "Registrar jugador 1",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/registro",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "registro"
+              ]
+            },
+            "description": "Registro publico de un Jugador. Guarda su id en {{idJugador}}. Es el jugador 'principal': crea equipos y partidos.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo\": \"jugador\",\n  \"username\": \"{{mailJugador_user}}\",\n  \"password\": \"password123\",\n  \"nombre\": \"Lionel\",\n  \"apellido\": \"Messi\",\n  \"mail\": \"{{mailJugador}}\",\n  \"telefono\": \"1122334455\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Genera un mail y username unicos para poder correr la request varias veces sin error 409",
+                  "const n = Date.now();",
+                  "pm.collectionVariables.set('mailJugador', 'jugador1_' + n + '@test.com');",
+                  "pm.collectionVariables.set('mailJugador_user', 'jugador1_' + n);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status esperado (201)', () => pm.expect(pm.response.code).to.be.oneOf([201]));",
+                  "if (pm.response.code < 300) {",
+                  "  pm.collectionVariables.set('idJugador', pm.response.json()._id);",
+                  "  console.log('idJugador =', pm.collectionVariables.get('idJugador'));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Registrar jugador 2",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/registro",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "registro"
+              ]
+            },
+            "description": "Segundo jugador, para sumarlo a equipos y partidos. Guarda {{idJugador2}}.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo\": \"jugador\",\n  \"username\": \"{{mailJugador2_user}}\",\n  \"password\": \"password123\",\n  \"nombre\": \"Angel\",\n  \"apellido\": \"Di Maria\",\n  \"mail\": \"{{mailJugador2}}\",\n  \"telefono\": \"1166778899\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Genera un mail y username unicos para poder correr la request varias veces sin error 409",
+                  "const n = Date.now();",
+                  "pm.collectionVariables.set('mailJugador2', 'jugador2_' + n + '@test.com');",
+                  "pm.collectionVariables.set('mailJugador2_user', 'jugador2_' + n);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status esperado (201)', () => pm.expect(pm.response.code).to.be.oneOf([201]));",
+                  "if (pm.response.code < 300) {",
+                  "  pm.collectionVariables.set('idJugador2', pm.response.json()._id);",
+                  "  console.log('idJugador2 =', pm.collectionVariables.get('idJugador2'));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Registrar jugador 3 (para eliminar)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/registro",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "registro"
+              ]
+            },
+            "description": "Jugador descartable que se usa en 'Eliminar usuario'. Guarda {{idJugador3}}.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo\": \"jugador\",\n  \"username\": \"{{mailJugador3_user}}\",\n  \"password\": \"password123\",\n  \"nombre\": \"Usuario\",\n  \"apellido\": \"Descartable\",\n  \"mail\": \"{{mailJugador3}}\",\n  \"telefono\": \"1100000000\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Genera un mail y username unicos para poder correr la request varias veces sin error 409",
+                  "const n = Date.now();",
+                  "pm.collectionVariables.set('mailJugador3', 'jugador3_' + n + '@test.com');",
+                  "pm.collectionVariables.set('mailJugador3_user', 'jugador3_' + n);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status esperado (201)', () => pm.expect(pm.response.code).to.be.oneOf([201]));",
+                  "if (pm.response.code < 300) {",
+                  "  pm.collectionVariables.set('idJugador3', pm.response.json()._id);",
+                  "  console.log('idJugador3 =', pm.collectionVariables.get('idJugador3'));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Registrar lugar",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/registro",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "registro"
+              ]
+            },
+            "description": "Registro de un Lugar (cancha). Es quien aprueba o rechaza partidos. Guarda {{idLugar}}.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo\": \"lugar\",\n  \"username\": \"{{mailLugar_user}}\",\n  \"password\": \"password123\",\n  \"nombre\": \"Complejo La Redonda\",\n  \"mail\": \"{{mailLugar}}\",\n  \"telefono\": \"1144445555\",\n  \"disponibilidad\": [\n    {\n      \"dia\": \"sabado\",\n      \"hora\": \"18:00\",\n      \"tipo_cancha\": 5\n    },\n    {\n      \"dia\": \"domingo\",\n      \"hora\": \"20:00\",\n      \"tipo_cancha\": 7\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Genera un mail y username unicos para poder correr la request varias veces sin error 409",
+                  "const n = Date.now();",
+                  "pm.collectionVariables.set('mailLugar', 'lugar_' + n + '@test.com');",
+                  "pm.collectionVariables.set('mailLugar_user', 'lugar_' + n);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status esperado (201)', () => pm.expect(pm.response.code).to.be.oneOf([201]));",
+                  "if (pm.response.code < 300) {",
+                  "  pm.collectionVariables.set('idLugar', pm.response.json()._id);",
+                  "  console.log('idLugar =', pm.collectionVariables.get('idLugar'));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Registrar admin (debe fallar 400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/registro",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "registro"
+              ]
+            },
+            "description": "Caso de error: un admin NO puede autoregistrarse. Esperado: 400.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo\": \"admin\",\n  \"username\": \"hacker\",\n  \"password\": \"password123\",\n  \"nombre\": \"Hacker\",\n  \"mail\": \"hacker@test.com\",\n  \"telefono\": \"0\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status esperado (400)', () => pm.expect(pm.response.code).to.be.oneOf([400]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Registrar con datos invalidos (debe fallar 400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/registro",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "registro"
+              ]
+            },
+            "description": "Caso de error: falta apellido, mail mal formado y password corta. Esperado: 400 con 'detalles'.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo\": \"jugador\",\n  \"username\": \"x1\",\n  \"password\": \"123\",\n  \"nombre\": \"Sin Datos\",\n  \"mail\": \"esto-no-es-un-mail\",\n  \"telefono\": \"0\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status esperado (400)', () => pm.expect(pm.response.code).to.be.oneOf([400]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login jugador 1",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "login"
+              ]
+            },
+            "description": "Devuelve { token, usuario }. Guarda el token en {{tokenJugador}}.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mail\": \"{{mailJugador}}\",\n  \"password\": \"password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  pm.collectionVariables.set('tokenJugador', pm.response.json().token);",
+                  "}",
+                  "pm.test('Status esperado (200)', () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login jugador 2",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "login"
+              ]
+            },
+            "description": "Guarda {{tokenJugador2}}.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mail\": \"{{mailJugador2}}\",\n  \"password\": \"password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  pm.collectionVariables.set('tokenJugador2', pm.response.json().token);",
+                  "}",
+                  "pm.test('Status esperado (200)', () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login lugar",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "login"
+              ]
+            },
+            "description": "Guarda {{tokenLugar}}.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mail\": \"{{mailLugar}}\",\n  \"password\": \"password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  pm.collectionVariables.set('tokenLugar', pm.response.json().token);",
+                  "}",
+                  "pm.test('Status esperado (200)', () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "login"
+              ]
+            },
+            "description": "Guarda {{tokenAdmin}}. REQUIERE que exista un admin en la base: crearlo una vez con 'npm run crear-admin -- admin@shaman.com admin12345'. Si usas otros datos, cambia mailAdmin / passwordAdmin en las variables de la coleccion.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mail\": \"{{mailAdmin}}\",\n  \"password\": \"{{passwordAdmin}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  pm.collectionVariables.set('tokenAdmin', pm.response.json().token);",
+                  "}",
+                  "pm.test('Status esperado (200)', () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login con password incorrecta (debe fallar)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "login"
+              ]
+            },
+            "description": "Caso de error: credenciales invalidas. Esperado: 401.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mail\": \"{{mailJugador}}\",\n  \"password\": \"incorrecta123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status esperado (401)', () => pm.expect(pm.response.code).to.be.oneOf([401]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Obtener todos los usuarios (admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios"
+              ]
+            },
+            "description": "Solo admin. Lista usuarios activos.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status esperado (200)', () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Obtener todos sin token (debe fallar 401)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios"
+              ]
+            },
+            "description": "Caso de error: sin header Authorization. Esperado: 401.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status esperado (401)', () => pm.expect(pm.response.code).to.be.oneOf([401]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Obtener todos como jugador (debe fallar 403)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios"
+              ]
+            },
+            "description": "Caso de error: token valido pero sin rol admin. Esperado: 403.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenJugador}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status esperado (403)', () => pm.expect(pm.response.code).to.be.oneOf([403]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Obtener usuario por id (propio perfil)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/{{idJugador}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "{{idJugador}}"
+              ]
+            },
+            "description": "El dueno del perfil ve su historial.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenJugador}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status esperado (200)', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "pm.test('Incluye historial', () => pm.expect(pm.response.json()).to.have.property('historial'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Obtener usuario por id (perfil ajeno)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/{{idJugador}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "{{idJugador}}"
+              ]
+            },
+            "description": "Otro usuario ve el perfil SIN historial.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenJugador2}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status esperado (200)', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "pm.test('No incluye historial', () => pm.expect(pm.response.json()).to.not.have.property('historial'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Obtener usuario con id invalido (debe fallar 400)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/esto-no-es-un-id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "esto-no-es-un-id"
+              ]
+            },
+            "description": "Caso de error: id mal formado.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenJugador}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status esperado (400)', () => pm.expect(pm.response.code).to.be.oneOf([400]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Modificar usuario (propio)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/{{idJugador}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "{{idJugador}}"
+              ]
+            },
+            "description": "Solo el propio usuario o un admin.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenJugador}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"telefono\": \"1199998888\",\n  \"nombre\": \"Leo\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status esperado (200)', () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Modificar otro usuario (debe fallar 403)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/{{idJugador2}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "{{idJugador2}}"
+              ]
+            },
+            "description": "Caso de error: jugador 1 intenta modificar a jugador 2. Esperado: 403.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenJugador}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Hackeado\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status esperado (403)', () => pm.expect(pm.response.code).to.be.oneOf([403]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Eliminar usuario (admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/{{idJugador3}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "{{idJugador3}}"
+              ]
+            },
+            "description": "Solo admin. Baja logica (estado -> eliminado).",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status esperado (200)', () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Equipos",
+      "item": [
+        {
+          "name": "Crear equipo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/equipos/crear",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "equipos",
+                "crear"
+              ]
+            },
+            "description": "El capitan tiene que estar dentro de 'integrantes'. Guarda {{idEquipo}}.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenJugador}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Los Pibes FC\",\n  \"jugadores_por_equipo\": 5,\n  \"integrantes\": [\n    \"{{idJugador}}\"\n  ],\n  \"capitan\": \"{{idJugador}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status esperado (201)', () => pm.expect(pm.response.code).to.be.oneOf([201]));",
+                  "if (pm.response.code < 300) {",
+                  "  pm.collectionVariables.set('idEquipo', pm.response.json()._id);",
+                  "  console.log('idEquipo =', pm.collectionVariables.get('idEquipo'));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear equipo con capitan invalido (debe fallar 400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/equipos/crear",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "equipos",
+                "crear"
+              ]
+            },
+            "description": "Caso de error: el capitan no esta entre los integrantes.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenJugador}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Equipo Roto\",\n  \"jugadores_por_equipo\": 5,\n  \"integrantes\": [\n    \"{{idJugador}}\"\n  ],\n  \"capitan\": \"{{idJugador2}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status esperado (400)', () => pm.expect(pm.response.code).to.be.oneOf([400]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear equipo sin integrantes (debe fallar 400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/equipos/crear",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "equipos",
+                "crear"
+              ]
+            },
+            "description": "Caso de error: falta la lista de integrantes.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenJugador}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Equipo Vacio\",\n  \"jugadores_por_equipo\": 5,\n  \"capitan\": \"{{idJugador}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status esperado (400)', () => pm.expect(pm.response.code).to.be.oneOf([400]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Obtener todos los equipos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/equipos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "equipos"
+              ]
+            },
+            "description": "Publico (sin token). Equipos activos.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status esperado (200)', () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Obtener equipo por id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/equipos/{{idEquipo}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "equipos",
+                "{{idEquipo}}"
+              ]
+            },
+            "description": "Publico (sin token).",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status esperado (200)', () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Agregar jugador al equipo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/equipos/{{idEquipo}}/agregar-jugador",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "equipos",
+                "{{idEquipo}}",
+                "agregar-jugador"
+              ]
+            },
+            "description": "Solo capitan o admin.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenJugador}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jugadorId\": \"{{idJugador2}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status esperado (201)', () => pm.expect(pm.response.code).to.be.oneOf([201]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Agregar jugador como no-capitan (debe fallar 403)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/equipos/{{idEquipo}}/agregar-jugador",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "equipos",
+                "{{idEquipo}}",
+                "agregar-jugador"
+              ]
+            },
+            "description": "Caso de error: jugador 2 no es capitan.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenJugador2}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jugadorId\": \"{{idJugador3}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status esperado (403)', () => pm.expect(pm.response.code).to.be.oneOf([403]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Quitar jugador del equipo",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/equipos/{{idEquipo}}/quitar-jugador/{{idJugador2}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "equipos",
+                "{{idEquipo}}",
+                "quitar-jugador",
+                "{{idJugador2}}"
+              ]
+            },
+            "description": "Solo capitan o admin. No se puede quitar al capitan.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenJugador}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status esperado (200)', () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Modificar equipo",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/equipos/{{idEquipo}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "equipos",
+                "{{idEquipo}}"
+              ]
+            },
+            "description": "Solo capitan o admin.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenJugador}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Los Pibes FC (renombrado)\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status esperado (200)', () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Eliminar equipo",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/equipos/{{idEquipo}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "equipos",
+                "{{idEquipo}}"
+              ]
+            },
+            "description": "Solo capitan o admin. Baja logica.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenJugador}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status esperado (200)', () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Partidos",
+      "item": [
+        {
+          "name": "Crear partido",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/partidos/crear",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "partidos",
+                "crear"
+              ]
+            },
+            "description": "Lo crea jugador 1; queda en 'pendiente_aprobacion'. Guarda {{idPartido}}.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenJugador}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fecha_horario\": \"{{fechaPartido}}\",\n  \"lugar\": \"{{idLugar}}\",\n  \"jugadores_por_equipo\": 5,\n  \"accesibilidad\": \"publico\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Fecha futura (manana a las 20:00) porque el modelo rechaza fechas pasadas",
+                  "const f = new Date(); f.setDate(f.getDate() + 1); f.setHours(20, 0, 0, 0);",
+                  "pm.collectionVariables.set('fechaPartido', f.toISOString());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status esperado (201)', () => pm.expect(pm.response.code).to.be.oneOf([201]));",
+                  "if (pm.response.code < 300) {",
+                  "  pm.collectionVariables.set('idPartido', pm.response.json()._id);",
+                  "  console.log('idPartido =', pm.collectionVariables.get('idPartido'));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear partido 2 (para rechazar)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/partidos/crear",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "partidos",
+                "crear"
+              ]
+            },
+            "description": "Segundo partido, para probar el rechazo del Lugar. Guarda {{idPartido2}}.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenJugador}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fecha_horario\": \"{{fechaPartido}}\",\n  \"lugar\": \"{{idLugar}}\",\n  \"jugadores_por_equipo\": 7,\n  \"accesibilidad\": \"privado\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Fecha futura (manana a las 20:00) porque el modelo rechaza fechas pasadas",
+                  "const f = new Date(); f.setDate(f.getDate() + 1); f.setHours(20, 0, 0, 0);",
+                  "pm.collectionVariables.set('fechaPartido', f.toISOString());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status esperado (201)', () => pm.expect(pm.response.code).to.be.oneOf([201]));",
+                  "if (pm.response.code < 300) {",
+                  "  pm.collectionVariables.set('idPartido2', pm.response.json()._id);",
+                  "  console.log('idPartido2 =', pm.collectionVariables.get('idPartido2'));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear partido con fecha pasada (debe fallar 400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/partidos/crear",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "partidos",
+                "crear"
+              ]
+            },
+            "description": "Caso de error del validador de fecha.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenJugador}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fecha_horario\": \"2020-01-01T20:00:00.000Z\",\n  \"lugar\": \"{{idLugar}}\",\n  \"jugadores_por_equipo\": 5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status esperado (400)', () => pm.expect(pm.response.code).to.be.oneOf([400]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Obtener todos los partidos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/partidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "partidos"
+              ]
+            },
+            "description": "Publico (sin token).",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status esperado (200)', () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Obtener partido por id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/partidos/{{idPartido}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "partidos",
+                "{{idPartido}}"
+              ]
+            },
+            "description": "Publico (sin token).",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status esperado (200)', () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Aprobar partido (lugar)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/partidos/{{idPartido}}/aprobar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "partidos",
+                "{{idPartido}}",
+                "aprobar"
+              ]
+            },
+            "description": "Solo un Lugar. pendiente_aprobacion -> confirmado. Ademas genera un mensaje de confirmacion para el creador.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenLugar}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status esperado (200)', () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Aprobar partido como jugador (debe fallar 403)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/partidos/{{idPartido2}}/aprobar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "partidos",
+                "{{idPartido2}}",
+                "aprobar"
+              ]
+            },
+            "description": "Caso de error: no es un Lugar.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenJugador}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status esperado (403)', () => pm.expect(pm.response.code).to.be.oneOf([403]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rechazar partido (lugar)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/partidos/{{idPartido2}}/rechazar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "partidos",
+                "{{idPartido2}}",
+                "rechazar"
+              ]
+            },
+            "description": "Solo un Lugar. Saca al partido de pendiente_aprobacion.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenLugar}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status esperado (200)', () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Unirse al partido",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/partidos/{{idPartido}}/unirse",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "partidos",
+                "{{idPartido}}",
+                "unirse"
+              ]
+            },
+            "description": "El partido tiene que estar confirmado. 'equipo' es 1 o 2 (numero, no texto).",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenJugador2}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"equipo\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status esperado (200)', () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Unirse al otro equipo del mismo partido (debe fallar 400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/partidos/{{idPartido}}/unirse",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "partidos",
+                "{{idPartido}}",
+                "unirse"
+              ]
+            },
+            "description": "Caso de error: el jugador ya esta anotado en el equipo 1.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenJugador2}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"equipo\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status esperado (400)', () => pm.expect(pm.response.code).to.be.oneOf([400]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Unirse con equipo invalido (debe fallar 400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/partidos/{{idPartido}}/unirse",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "partidos",
+                "{{idPartido}}",
+                "unirse"
+              ]
+            },
+            "description": "Caso de error: 'equipo' tiene que ser 1 o 2.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenJugador2}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"equipo\": 3\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status esperado (400)', () => pm.expect(pm.response.code).to.be.oneOf([400]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Bajarse del partido",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/partidos/{{idPartido}}/bajarse",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "partidos",
+                "{{idPartido}}",
+                "bajarse"
+              ]
+            },
+            "description": "El jugador sale del equipo en el que estaba.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenJugador2}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status esperado (200)', () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Modificar partido (creador)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/partidos/{{idPartido}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "partidos",
+                "{{idPartido}}"
+              ]
+            },
+            "description": "Solo creador o admin. Solo cambia fecha_horario, lugar, jugadores_por_equipo y accesibilidad: el 'estado' del body se ignora.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenJugador}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accesibilidad\": \"privado\",\n  \"estado\": \"finalizado\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status esperado (200)', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "pm.test('El estado no cambio', () => pm.expect(pm.response.json().estado).to.eql('confirmado'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Modificar partido con fecha pasada (debe fallar 400)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/partidos/{{idPartido}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "partidos",
+                "{{idPartido}}"
+              ]
+            },
+            "description": "Caso de error: ahora el PUT corre las validaciones del modelo.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenJugador}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fecha_horario\": \"2020-01-01T20:00:00.000Z\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status esperado (400)', () => pm.expect(pm.response.code).to.be.oneOf([400]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Modificar partido como otro jugador (debe fallar 403)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/partidos/{{idPartido}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "partidos",
+                "{{idPartido}}"
+              ]
+            },
+            "description": "Caso de error: jugador 2 no es el creador.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenJugador2}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accesibilidad\": \"publico\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status esperado (403)', () => pm.expect(pm.response.code).to.be.oneOf([403]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Eliminar partido (creador)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/partidos/{{idPartido}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "partidos",
+                "{{idPartido}}"
+              ]
+            },
+            "description": "Solo creador o admin. Baja logica (estado -> eliminado).",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenJugador}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status esperado (200)', () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4. Mensajeria",
+      "item": [
+        {
+          "name": "Obtener mis mensajes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/mensajes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mensajes"
+              ]
+            },
+            "description": "Mensajes del usuario logueado. Despues de 'Aprobar partido', jugador 1 tiene la confirmacion. Guarda el id del primero en {{idMensaje}}.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenJugador}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status esperado (200)', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "const lista = pm.response.json();",
+                  "if (Array.isArray(lista) && lista.length) pm.collectionVariables.set('idMensaje', lista[0]._id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Obtener mensaje por id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/mensajes/{{idMensaje}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mensajes",
+                "{{idMensaje}}"
+              ]
+            },
+            "description": "Solo el receptor del mensaje.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenJugador}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status esperado (200)', () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Obtener mensaje ajeno (debe fallar 403)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/mensajes/{{idMensaje}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mensajes",
+                "{{idMensaje}}"
+              ]
+            },
+            "description": "Caso de error: jugador 2 no es el receptor.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenJugador2}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status esperado (403)', () => pm.expect(pm.response.code).to.be.oneOf([403]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Marcar mensaje como leido",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/mensajes/{{idMensaje}}/leer",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mensajes",
+                "{{idMensaje}}",
+                "leer"
+              ]
+            },
+            "description": "Pone leido: true.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenJugador}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status esperado (200)', () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Eliminar mensaje (admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/mensajes/{{idMensaje}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mensajes",
+                "{{idMensaje}}"
+              ]
+            },
+            "description": "Solo admin. Baja logica.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status esperado (200)', () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Obtener mensaje eliminado (debe fallar 404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/mensajes/{{idMensaje}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mensajes",
+                "{{idMensaje}}"
+              ]
+            },
+            "description": "Un mensaje dado de baja ya no se puede ver.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenJugador}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status esperado (404)', () => pm.expect(pm.response.code).to.be.oneOf([404]));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:4000/api",
+      "type": "string"
+    },
+    {
+      "key": "mailAdmin",
+      "value": "admin@shaman.com",
+      "type": "string"
+    },
+    {
+      "key": "passwordAdmin",
+      "value": "admin12345",
+      "type": "string"
+    },
+    {
+      "key": "tokenJugador",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tokenJugador2",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tokenLugar",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tokenAdmin",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "idJugador",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "idJugador2",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "idJugador3",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "idLugar",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "idEquipo",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "idPartido",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "idPartido2",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "idMensaje",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "fechaPartido",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "mailJugador",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "mailJugador2",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "mailJugador3",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "mailLugar",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

@@ -43,9 +43,20 @@ export const loginUsuario = async ({ mail, password } = {}) => {
     return usuario;
 };
 
-export const obtenerUsuarios = () => obtenerTodos(Usuario, { estado: 'activo' });
+export const obtenerUsuarios = () => obtenerTodos(Usuario, { estado: ESTADOS_USUARIO.ACTIVO });
 
-export const obtenerUsuarioPorId = (id) => obtenerPorId(Usuario, id);
+// "historial" es visible solo para el dueño del perfil (y para un admin). Si lo pide otro
+// usuario, se devuelve el perfil sin ese campo. No se puede resolver en el Schema con
+// select:false porque eso lo ocultaría también para el propio dueño.
+export const obtenerUsuarioPorId = async (id, solicitante) => {
+    const usuario = await obtenerPorId(Usuario, id);
+
+    const puedeVerHistorial = solicitante?.id === id || solicitante?.tipo === TIPOS_USUARIO.ADMIN;
+    if (puedeVerHistorial) return usuario;
+
+    const { historial, ...perfilPublico } = usuario.toJSON(); // toJSON() ya saca la password
+    return perfilPublico;
+};
 
 // No usa el modificar() genérico (findByIdAndUpdate) porque ese NO ejecuta el hook pre('save'):
 // si se cambiaba la password, quedaba guardada en texto plano. Con findById + save() se hashea
