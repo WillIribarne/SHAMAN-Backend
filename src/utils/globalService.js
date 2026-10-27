@@ -12,12 +12,12 @@ export const obtenerPorId = async (Modelo, id) => {
     return doc;
 };
 
-export const modificar = async (Modelo, id, datos) => {
+/*export const modificar = async (Modelo, id, datos) => {
     if (!mongoose.isValidObjectId(id)) throw crearError('ID inválido', 400);
     const doc = await Modelo.findByIdAndUpdate(id, datos, { returnDocument: 'after' });
     if (!doc) throw crearError('No encontrado', 404);
     return doc;
-};
+};*/
 
 export const eliminar = async (Modelo, id, estadoActivo, estadoEliminado) => {
     if (!mongoose.isValidObjectId(id)) throw crearError('ID inválido', 400);
