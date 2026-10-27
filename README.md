@@ -45,7 +45,7 @@ También se puede correr de forma local (ver más abajo), en `http://localhost:4
 
 ---
 
-## 3. :atom: :hammer_and_wrench: Tecnologías utilizadas
+## 3. :atom_symbol: :hammer_and_wrench: Tecnologías utilizadas
 
 | Tecnología | Para qué se usa |
 |---|---|
@@ -320,6 +320,8 @@ pendiente_aprobacion ──(el Lugar aprueba)──▶ confirmado ──(se jueg
 Cualquier estado ──(baja lógica)──▶ eliminado
 ```
 
+> Los estados `finalizado` y `cancelado` están contemplados en el modelo, pero todavía no hay un endpoint que los asigne.
+
 ### ✉️ Mensajería — `/api/mensajes`
 
 Los mensajes **no se crean a mano**: el sistema los genera automáticamente cuando pasa algo relevante (se crea un partido → aviso al Lugar; el Lugar aprueba o rechaza → aviso al creador; alguien se une → aviso al creador; se elimina un partido → aviso a los jugadores anotados).
@@ -333,7 +335,7 @@ Los mensajes **no se crean a mano**: el sistema los genera automáticamente cuan
 
 ---
 
-## Flujo de prueba sugerido
+## 10. Flujo de prueba sugerido
 
 Para probar el circuito completo con Postman:
 
