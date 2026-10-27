@@ -59,10 +59,17 @@ export const obtenerUsuarioPorId = async (id, solicitante) => {
     const usuario = await obtenerPorId(Usuario, id);
 
     const puedeVerHistorial = solicitante?.id === id || solicitante?.tipo === TIPOS_USUARIO.ADMIN;
-    if (puedeVerHistorial) return usuario;
 
-    const { historial, ...perfilPublico } = usuario.toJSON(); // toJSON() ya saca la password
-    return perfilPublico;
+    let resultado 
+
+    if (puedeVerHistorial) {
+      resultado = usuario;
+    } else {
+      const { historial, ...perfilPublico } = usuario.toJSON();
+      resultado = perfilPublico;
+    }
+
+    return resultado;
 };
 
 // No usa el modificar() genérico (findByIdAndUpdate) porque ese NO ejecuta el hook pre('save'):
