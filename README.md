@@ -2,7 +2,7 @@
 
 > *La magia de la organización.*
 
-## ¿Qué es?
+## 1. :soccer: :incoming_envelope: ¿Qué es SHAMANapp?
 
 **SHAMANapp** es una API REST para organizar partidos de fútbol amateur entre amigos. Permite registrarse, armar equipos, crear partidos en una cancha (un "Lugar"), anotarse a partidos públicos y recibir notificaciones de todo lo que pasa (partidos confirmados, rechazados, cancelados, jugadores que se suman, etc.).
 
@@ -30,7 +30,7 @@ Hay una sola colección `Usuario` con tres tipos (todos inician sesión por el m
 
 ---
 
-## ¿Desde dónde se puede usar?
+## 2. :ringed_planet: ¿Desde dónde se puede usar?
 
 La API está desplegada en **Render** (plan gratuito):
 
@@ -45,7 +45,7 @@ También se puede correr de forma local (ver más abajo), en `http://localhost:4
 
 ---
 
-## Tecnologías utilizadas
+## 3. :atom: :hammer_and_wrench: Tecnologías utilizadas
 
 | Tecnología | Para qué se usa |
 |---|---|
@@ -65,7 +65,7 @@ El proyecto usa **ES Modules** (`"type": "module"`, sintaxis `import`/`export`).
 
 ---
 
-## Software necesario
+## 4.  :computer: Software necesario
 
 Antes de empezar, tené instalado:
 
@@ -87,7 +87,7 @@ git --version
 
 ---
 
-## Variables de entorno
+## 5. :nut_and_bolt: Variables de entorno (.env)
 
 El proyecto lee su configuración de un archivo **`.env`** en la raíz del repositorio. Este archivo **no se sube a GitHub** (está en `.gitignore`), así que hay que crearlo a mano.
 
@@ -111,7 +111,7 @@ PORT=4000
 
 ---
 
-## Instalación y ejecución paso a paso
+## 6. :mechanic: Instalación y ejecución paso a paso 
 
 **1. Clonar el repositorio**
 
@@ -164,7 +164,7 @@ Y al entrar a [http://localhost:4000/toyvivo](http://localhost:4000/toyvivo) des
 
 ---
 
-## Estructura y arquitectura del proyecto
+## 7. :open_file_folder: Estructura y arquitectura del proyecto
 
 ![Estructura del proyecto](assets/estructura-proyecto.png)
 
@@ -195,7 +195,7 @@ Todos los errores se responden en JSON con el mismo formato:
 
 ---
 
-## Colección de Postman
+## 8. :toolbox: Colección de Postman
 
 La colección con **todos los endpoints ya cargados** está en:
 
@@ -213,7 +213,7 @@ postman/SHAMAN-API.postman_collection.json
 
 ---
 
-## Endpoints
+## 9. :arrow_forward: Endpoints
 
 **Autenticación:** los endpoints marcados con 🔒 requieren estar logueado, enviando el token en el header:
 
